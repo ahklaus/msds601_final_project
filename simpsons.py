@@ -88,7 +88,7 @@ def build_simpsons_figure(x, y, groups):
     fig = go.Figure()
 
     unique_groups = np.unique(groups)
-    palette = px.colors.qualitative.Bold
+    palette = px.colors.qualitative.Safe
     color_map = {name: palette[i % len(palette)] for i, name in enumerate(unique_groups)}
 
     for group_name in unique_groups:
