@@ -1,12 +1,10 @@
 import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-import plotly.express as px
-import pandas as pd
-from dash import dcc
+import numpy as np
+import plotly.graph_objects as go
 
-# Example data for demo (you can remove this)
-df = px.data.gapminder().query("year == 2007")
+"""Interactive blog + Simpson's Paradox simulation."""
 
 # Initialize app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
@@ -175,17 +173,154 @@ Explain what the user will be able to explore below.
 
 
 # ---------- INTERACTIVE DASHBOARD SECTION ----------
-# Replace this with your own simulation/graph/callbacks
+# Simulation helpers
+def compute_linear_fit(x_values, y_values):
+    x = np.asarray(x_values)
+    y = np.asarray(y_values)
+    x_mean = x.mean()
+    y_mean = y.mean()
+    x_var = np.var(x)
+    if x_var == 0:
+        # Avoid division by zero; fall back to horizontal line at mean
+        return 0.0, float(y_mean)
+    slope = float(np.cov(x, y, bias=True)[0, 1] / x_var)
+    intercept = float(y_mean - slope * x_mean)
+    return slope, intercept
+
+
+def generate_simpsons_data(
+    n_groups=2,
+    points_per_group=150,
+    betas=None,
+    sigma=1.0,
+    confound_strength=4.0,
+):
+    if betas is None:
+        betas = [1.0] * n_groups
+    if len(betas) != n_groups:
+        betas = [1.0] * n_groups
+
+    # Group-wise X separation and opposite intercept tilt to induce paradox
+    x_width = 5.0
+    separation = max(0.0, float(confound_strength))  # controls X offset between groups
+    intercept_gap = float(confound_strength) * 2.0    # controls intercept drop by group index
+
+    all_x, all_y, all_groups = [], [], []
+    for group_index in range(n_groups):
+        n = int(points_per_group)
+        beta = float(betas[group_index])
+
+        # Shift X range to the right as group index increases
+        x_start = group_index * separation
+        x_vals = np.random.rand(n) * x_width + x_start
+
+        # Higher-index groups have lower intercepts; opposite trend vs X separation
+        intercept = (n_groups - 1 - group_index) * intercept_gap
+
+        noise = np.random.randn(n) * float(sigma)
+        y_vals = beta * x_vals + intercept + noise
+
+        all_x.append(x_vals)
+        all_y.append(y_vals)
+        all_groups.append(np.array([f"Group {group_index + 1}"] * n))
+
+    x = np.concatenate(all_x)
+    y = np.concatenate(all_y)
+    groups = np.concatenate(all_groups)
+
+    # If aggregate slope still matches within-group sign, strengthen intercept tilt
+    # to reliably exhibit Simpson's paradox for positive betas.
+    slope_all, _ = compute_linear_fit(x, y)
+    group_slopes = []
+    for group_name in np.unique(groups):
+        m = groups == group_name
+        s, _ = compute_linear_fit(x[m], y[m])
+        group_slopes.append(s)
+
+    if len(group_slopes) > 0:
+        within_sign = np.sign(np.median(group_slopes))
+        agg_sign = np.sign(slope_all)
+        tries = 0
+        while within_sign != 0 and agg_sign == within_sign and tries < 3:
+            # Increase intercept contrast and recompute y
+            intercept_gap *= 1.5
+            y_list = []
+            for group_index in range(n_groups):
+                m = groups == f"Group {group_index + 1}"
+                intercept = (n_groups - 1 - group_index) * intercept_gap
+                y_list.append(betas[group_index] * x[m] + intercept + np.random.randn(m.sum()) * float(sigma))
+            y = np.concatenate(y_list)
+            slope_all, _ = compute_linear_fit(x, y)
+            agg_sign = np.sign(slope_all)
+            tries += 1
+
+    return x, y, groups
+
+
+def build_simpsons_figure(x, y, groups):
+    fig = go.Figure()
+
+    # Per-group scatter + trend lines
+    unique_groups = np.unique(groups)
+    for group_name in unique_groups:
+        mask = groups == group_name
+        x_g = x[mask]
+        y_g = y[mask]
+        fig.add_trace(go.Scatter(x=x_g, y=y_g, mode="markers", name=str(group_name)))
+        slope_g, intercept_g = compute_linear_fit(x_g, y_g)
+        x_line = np.array([x_g.min(), x_g.max()])
+        y_line = slope_g * x_line + intercept_g
+        fig.add_trace(
+            go.Scatter(x=x_line, y=y_line, mode="lines", name=f"{group_name} trend")
+        )
+
+    # Aggregate trend
+    slope_all, intercept_all = compute_linear_fit(x, y)
+    x_line = np.array([x.min(), x.max()])
+    y_line = slope_all * x_line + intercept_all
+    fig.add_trace(
+        go.Scatter(
+            x=x_line,
+            y=y_line,
+            mode="lines",
+            name="Aggregate trend",
+            line=dict(color="black", width=3),
+        )
+    )
+
+    # Show slope info to make paradox obvious
+    fig.update_layout(
+        title=(
+            "Simpson's Paradox: Group vs Aggregate Trends"
+        ),
+        xaxis_title="X",
+        yaxis_title="Y",
+        template="plotly_white",
+    )
+    return fig
+
 
 controls = dbc.Card(
     [
         html.H5("Simulation Controls", className="card-title"),
-        html.Label("Example dropdown:"),
-        dcc.Dropdown(
-            id="continent-dropdown",
-            options=[{"label": c, "value": c} for c in df["continent"].unique()],
-            value="Asia",
-        ),
+        html.Label("Number of Groups"),
+        dcc.Slider(id="num-groups", min=2, max=5, step=1, value=2),
+
+        html.Br(),
+        html.Label("Noise Level (sigma)"),
+        dcc.Slider(id="noise", min=0, max=5, step=0.1, value=1.0),
+
+        html.Br(),
+        html.Label("Confounding strength"),
+        dcc.Slider(id="confound", min=0, max=10, step=0.5, value=4.0),
+
+        html.Br(),
+        html.Label("Points per group"),
+        dcc.Slider(id="points-per-group", min=50, max=500, step=25, value=200),
+
+        html.Br(),
+        html.Label("Effect size per group (comma separated)"),
+        dcc.Input(id="beta-input", value="1,1", type="text", style={"width": "100%"}),
     ],
     body=True,
 )
@@ -267,20 +402,35 @@ app.layout = dbc.Container(
 # ---------- CALLBACKS ----------
 @app.callback(
     dash.Output("sim-graph", "figure"),
-    dash.Input("continent-dropdown", "value"),
+    dash.Input("num-groups", "value"),
+    dash.Input("noise", "value"),
+    dash.Input("confound", "value"),
+    dash.Input("points-per-group", "value"),
+    dash.Input("beta-input", "value"),
 )
-def update_graph(continent):
-    filtered = df[df["continent"] == continent]
-    fig = px.scatter(
-        filtered,
-        x="gdpPercap",
-        y="lifeExp",
-        size="pop",
-        color="country",
-        title=f"Life Expectancy vs GDP per Capita ({continent})",
-        hover_name="country",
+def update_graph(n_groups, sigma, confound, points_per_group, beta_text):
+    try:
+        betas = [float(x.strip()) for x in str(beta_text).split(",") if x.strip() != ""]
+    except Exception:
+        betas = [1.0] * int(n_groups)
+
+    if not isinstance(n_groups, int):
+        try:
+            n_groups = int(n_groups)
+        except Exception:
+            n_groups = 2
+
+    if len(betas) != n_groups:
+        betas = [1.0] * n_groups
+
+    x, y, groups = generate_simpsons_data(
+        n_groups=n_groups,
+        points_per_group=int(points_per_group),
+        betas=betas,
+        sigma=sigma,
+        confound_strength=confound,
     )
-    fig.update_layout(template="plotly_white")
+    fig = build_simpsons_figure(x, y, groups)
     return fig
 
 
