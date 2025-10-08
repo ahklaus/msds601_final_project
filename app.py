@@ -196,11 +196,11 @@ controls = dbc.Card(
         dbc.Row([
             dbc.Col([
                 html.Label("Groups", style={"fontWeight": 600}),
-                dcc.Slider(id="num-groups", min=2, max=5, step=1, value=2, marks={}, tooltip={"placement": "bottom", "always_visible": False}),
+                dcc.Slider(id="num-groups", min=2, max=5, step=1, value=2, marks=None, tooltip={"placement": "bottom", "always_visible": False}),
             ], md=6),
             dbc.Col([
                 html.Label("Points / group", style={"fontWeight": 600}),
-                dcc.Slider(id="points-per-group", min=50, max=500, step=25, value=200, marks={}, tooltip={"placement": "bottom", "always_visible": False}),
+                dcc.Slider(id="points-per-group", min=50, max=500, step=25, value=200, marks=None, tooltip={"placement": "bottom", "always_visible": False}),
             ], md=6),
         ]),
 
@@ -209,11 +209,11 @@ controls = dbc.Card(
         dbc.Row([
             dbc.Col([
                 html.Label("Noise (sigma)", style={"fontWeight": 600}),
-                dcc.Slider(id="noise", min=0, max=5, step=0.1, value=1.0, marks={}, tooltip={"placement": "bottom", "always_visible": False}),
+                dcc.Slider(id="noise", min=0, max=5, step=0.1, value=1.0, marks=None, tooltip={"placement": "bottom", "always_visible": False}),
             ], md=6),
             dbc.Col([
                 html.Label("Confounding", style={"fontWeight": 600}),
-                dcc.Slider(id="confound", min=0, max=10, step=0.5, value=4.0, marks={}, tooltip={"placement": "bottom", "always_visible": False}),
+                dcc.Slider(id="confound", min=0, max=10, step=0.5, value=4.0, marks=None, tooltip={"placement": "bottom", "always_visible": False}),
             ], md=6),
         ]),
 
