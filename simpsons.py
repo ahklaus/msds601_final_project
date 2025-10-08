@@ -1,5 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 
 
 def compute_linear_fit(x_values, y_values):
@@ -21,6 +22,7 @@ def generate_simpsons_data(
     betas=None,
     sigma=1.0,
     confound_strength=4.0,
+    seed=None,
 ):
     if betas is None:
         betas = [1.0] * n_groups
@@ -31,15 +33,17 @@ def generate_simpsons_data(
     separation = max(0.0, float(confound_strength))
     intercept_gap = float(confound_strength) * 2.0
 
+    rng = np.random.default_rng(seed)
+
     all_x, all_y, all_groups = [], [], []
     for group_index in range(n_groups):
         n = int(points_per_group)
         beta = float(betas[group_index])
 
         x_start = group_index * separation
-        x_vals = np.random.rand(n) * x_width + x_start
+        x_vals = rng.random(n) * x_width + x_start
         intercept = (n_groups - 1 - group_index) * intercept_gap
-        noise = np.random.randn(n) * float(sigma)
+        noise = rng.normal(0.0, float(sigma), size=n)
         y_vals = beta * x_vals + intercept + noise
 
         all_x.append(x_vals)
@@ -70,7 +74,7 @@ def generate_simpsons_data(
                 y_list.append(
                     betas[group_index] * x[m]
                     + intercept
-                    + np.random.randn(m.sum()) * float(sigma)
+                    + rng.normal(0.0, float(sigma), size=m.sum())
                 )
             y = np.concatenate(y_list)
             slope_all, _ = compute_linear_fit(x, y)
@@ -84,16 +88,39 @@ def build_simpsons_figure(x, y, groups):
     fig = go.Figure()
 
     unique_groups = np.unique(groups)
+    palette = px.colors.qualitative.Bold
+    color_map = {name: palette[i % len(palette)] for i, name in enumerate(unique_groups)}
+
     for group_name in unique_groups:
         mask = groups == group_name
         x_g = x[mask]
         y_g = y[mask]
-        fig.add_trace(go.Scatter(x=x_g, y=y_g, mode="markers", name=str(group_name)))
+        color = color_map[str(group_name)]
+        fig.add_trace(
+            go.Scatter(
+                x=x_g,
+                y=y_g,
+                mode="markers",
+                name=str(group_name),
+                marker=dict(size=7, opacity=0.75, color=color),
+                hovertemplate="Group=%{legendgroup}<br>X=%{x:.2f}<br>Y=%{y:.2f}<extra></extra>",
+                legendgroup=str(group_name),
+            )
+        )
         slope_g, intercept_g = compute_linear_fit(x_g, y_g)
         x_line = np.array([x_g.min(), x_g.max()])
         y_line = slope_g * x_line + intercept_g
         fig.add_trace(
-            go.Scatter(x=x_line, y=y_line, mode="lines", name=f"{group_name} trend")
+            go.Scatter(
+                x=x_line,
+                y=y_line,
+                mode="lines",
+                name=f"{group_name} trend",
+                line=dict(color=color, width=3),
+                hovertemplate=f"{group_name} trend<extra></extra>",
+                legendgroup=str(group_name),
+                showlegend=False,
+            )
         )
 
     slope_all, intercept_all = compute_linear_fit(x, y)
@@ -105,7 +132,8 @@ def build_simpsons_figure(x, y, groups):
             y=y_line,
             mode="lines",
             name="Aggregate trend",
-            line=dict(color="black", width=3),
+            line=dict(color="#111111", width=4, dash="solid"),
+            hovertemplate="Aggregate trend<extra></extra>",
         )
     )
 
@@ -114,7 +142,25 @@ def build_simpsons_figure(x, y, groups):
         xaxis_title="X",
         yaxis_title="Y",
         template="plotly_white",
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#ffffff",
+        font=dict(family="Inter, Segoe UI, system-ui, -apple-system", size=15),
+        margin=dict(l=40, r=30, t=60, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        xaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.06)"),
+        yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.06)"),
     )
     return fig
+
+
+def compute_slopes(x, y, groups):
+    unique_groups = np.unique(groups)
+    group_to_slope = {}
+    for group_name in unique_groups:
+        m = groups == group_name
+        s, _ = compute_linear_fit(x[m], y[m])
+        group_to_slope[str(group_name)] = float(s)
+    agg_slope, _ = compute_linear_fit(x, y)
+    return group_to_slope, float(agg_slope)
 
 

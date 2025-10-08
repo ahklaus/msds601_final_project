@@ -3,7 +3,11 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objects as go
-from simpsons import generate_simpsons_data, build_simpsons_figure
+from simpsons import (
+    generate_simpsons_data,
+    build_simpsons_figure,
+    compute_slopes,
+)
 
 """Interactive blog + Simpson's Paradox simulation."""
 
@@ -180,32 +184,59 @@ from simpsons import compute_linear_fit  # only if needed elsewhere
 
 controls = dbc.Card(
     [
-        html.H5("Simulation Controls", className="card-title"),
-        html.Label("Number of Groups"),
-        dcc.Slider(id="num-groups", min=2, max=5, step=1, value=2),
+        html.Div(
+            [
+                html.H4("Simpson's Paradox Simulator", className="card-title", style={"marginBottom": "6px"}),
+                html.Div("Adjust parameters to explore group vs aggregate trends.", style={"color": "#6c757d"}),
+            ]
+        ),
+        html.Hr(),
+
+        dbc.Row([
+            dbc.Col([
+                html.Label("Groups", style={"fontWeight": 600}),
+                dcc.Slider(id="num-groups", min=2, max=5, step=1, value=2, tooltip={"placement": "bottom", "always_visible": False}),
+            ], md=6),
+            dbc.Col([
+                html.Label("Points / group", style={"fontWeight": 600}),
+                dcc.Slider(id="points-per-group", min=50, max=500, step=25, value=200, tooltip={"placement": "bottom", "always_visible": False}),
+            ], md=6),
+        ]),
 
         html.Br(),
-        html.Label("Noise Level (sigma)"),
-        dcc.Slider(id="noise", min=0, max=5, step=0.1, value=1.0),
+
+        dbc.Row([
+            dbc.Col([
+                html.Label("Noise (sigma)", style={"fontWeight": 600}),
+                dcc.Slider(id="noise", min=0, max=5, step=0.1, value=1.0, tooltip={"placement": "bottom", "always_visible": False}),
+            ], md=6),
+            dbc.Col([
+                html.Label("Confounding", style={"fontWeight": 600}),
+                dcc.Slider(id="confound", min=0, max=10, step=0.5, value=4.0, tooltip={"placement": "bottom", "always_visible": False}),
+            ], md=6),
+        ]),
 
         html.Br(),
-        html.Label("Confounding strength"),
-        dcc.Slider(id="confound", min=0, max=10, step=0.5, value=4.0),
 
-        html.Br(),
-        html.Label("Points per group"),
-        dcc.Slider(id="points-per-group", min=50, max=500, step=25, value=200),
+        dbc.Row([
+            dbc.Col([
+                html.Label("Betas (comma separated)", style={"fontWeight": 600}),
+                dcc.Input(id="beta-input", value="1,1", type="text", style={"width": "100%"}),
+            ], md=8),
+            dbc.Col([
+                html.Label("Seed", style={"fontWeight": 600}),
+                dcc.Input(id="seed", value="", type="text", placeholder="Optional", style={"width": "100%"}),
+            ], md=4),
+        ]),
 
-        html.Br(),
-        html.Label("Effect size per group (comma separated)"),
-        dcc.Input(id="beta-input", value="1,1", type="text", style={"width": "100%"}),
+        html.Div(id="slope-summary", style={"marginTop": "12px", "color": "#495057"}),
     ],
     body=True,
 )
 
 graph_card = dbc.Card(
     [
-        dcc.Graph(id="sim-graph"),
+        dcc.Graph(id="sim-graph", config={"displayModeBar": True, "displaylogo": False}, style={"height": "600px"}),
     ],
     body=True,
 )
@@ -280,13 +311,15 @@ app.layout = dbc.Container(
 # ---------- CALLBACKS ----------
 @app.callback(
     dash.Output("sim-graph", "figure"),
+    dash.Output("slope-summary", "children"),
     dash.Input("num-groups", "value"),
     dash.Input("noise", "value"),
     dash.Input("confound", "value"),
     dash.Input("points-per-group", "value"),
     dash.Input("beta-input", "value"),
+    dash.Input("seed", "value"),
 )
-def update_graph(n_groups, sigma, confound, points_per_group, beta_text):
+def update_graph(n_groups, sigma, confound, points_per_group, beta_text, seed_text):
     try:
         betas = [float(x.strip()) for x in str(beta_text).split(",") if x.strip() != ""]
     except Exception:
@@ -301,15 +334,31 @@ def update_graph(n_groups, sigma, confound, points_per_group, beta_text):
     if len(betas) != n_groups:
         betas = [1.0] * n_groups
 
+    seed = None
+    if str(seed_text).strip() != "":
+        try:
+            seed = int(str(seed_text).strip())
+        except Exception:
+            seed = None
+
     x, y, groups = generate_simpsons_data(
         n_groups=n_groups,
         points_per_group=int(points_per_group),
         betas=betas,
         sigma=sigma,
         confound_strength=confound,
+        seed=seed,
     )
     fig = build_simpsons_figure(x, y, groups)
-    return fig
+
+    group_slopes, agg_slope = compute_slopes(x, y, groups)
+    group_parts = [f"{name}: {slope:+.3f}" for name, slope in sorted(group_slopes.items())]
+    summary = html.Div([
+        html.Span("Slopes ", style={"fontWeight": 600}),
+        html.Span("(" + ", ".join(group_parts) + f")  |  Aggregate: {agg_slope:+.3f}"),
+    ])
+
+    return fig, summary
 
 
 if __name__ == "__main__":
