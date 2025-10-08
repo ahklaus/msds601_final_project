@@ -250,9 +250,11 @@ interactive_section = dbc.Container(
                 dbc.Col(graph_card, md=9),
             ],
             align="center",
+            className="g-2",
         )
     ],
     fluid=True,
+    style={"maxWidth": "1200px", "padding": "0 12px"},
 )
 
 # ---------- BLOG CONTINUATION ----------

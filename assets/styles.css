@@ -22,3 +22,8 @@
   margin-bottom: 8px !important;
 }
 
+/* Graph responsive height for 100% zoom */
+#sim-graph {
+  height: 70vh !important;
+}
+
