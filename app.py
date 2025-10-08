@@ -22,7 +22,7 @@ app.title = "My Interactive Blog"
 
 blog_content = dcc.Markdown(r"""
 # Causal Inference in Regression
-*MSDS601 Final Project Amelia Klaus, Rodrigo Cuadra, & Rory Mackintosh *  
+*MSDS601 Final Project by Amelia Klaus, Rodrigo Cuadra, & Rory Mackintosh *  
 
 ---
 
@@ -31,14 +31,14 @@ Ask anyone with a high school diploma what they remember and you’ll usually ge
 
 ![Correlation vs Causation](/assets/image1.png)
 
-There are countless instances of correlated events not having a causal relationship, such as the increase in associate degrees awarded in science technologies and google searches for “avocado toast.” Does this mean that as students developed their engineering skills their entire career was leading to the breakthrough of engineering the perfect avocado toast? Not quite. More of these examples can be found on [Tyler Vigen’s project on *Spurious Correlations*](https://www.tylervigen.com/spurious-correlations) [^1].
+There are countless instances of correlated events not having a causal relationship, such as the increase in associate degrees awarded in science technologies and Google searches for “avocado toast.” Does this mean that as students developed their engineering skills their entire career was leading to the breakthrough of engineering the perfect avocado toast? Not quite. More of these examples can be found on [Tyler Vigen’s project on *Spurious Correlations*](https://www.tylervigen.com/spurious-correlations) [^1].
 
  
 Though in reverse, we cannot have causation without correlation. This leads us to question the other requirements for causal relationships, at what point can we say the perfection of avocado toast was caused by the increase in associate degrees awarded in science technologies?
 
 Before we get there, it’s important to look at the inferences of regression, specifically, the difference between prediction and causal inference. Prediction involves the comparison of outcomes between different units. An example of this would be comparing the test scores of two students: one who studied for the test and one who did not. Causal inference takes the same unit and examines multiple outcomes. How would student A’s test score differ if they studied versus if they didn’t? This type of inference addresses the issue of “correlation is not causation” because it fixates on cause-and-effect relationships to draw conclusions beyond statistical association. 
 
-Standard regression is a tool built for prediction, not causation. So to be able to draw causal conclusions from regression models, we must focus on strict assumptions and frameworks. Going forward, we will tackle the fundamental problem with causal inference, a framework to define and identify causal effects, and a real-world example using Simpon’s Paradox.
+Standard regression is a tool built for prediction, not causation. So to be able to draw causal conclusions from regression models, we must focus on strict assumptions and frameworks. Going forward, we will tackle the fundamental problem with causal inference, a framework to define and identify causal effects, and a real-world example using Simpson’s Paradox.
 
 ### The Fundamental Problem
   
@@ -53,11 +53,11 @@ But in reality, you only get to live one of those outcomes. In this case, you ei
 ### SLR, MLR, and Multicollinearity
 In the context of simple linear regression, take the example above of predicting exam scores, $Y$, from study hours, $X_1$. To build a simple regression model we hypothesize the model to be of the form
 
-$$Y = \beta_0 + \beta_1X_1 + \epsilon$$
+$$Y_i = \beta_0 + \beta_1 X_{1i} + \varepsilon_i$$
 
 Though, since we will never truly know the values of $\beta_0$ and $\beta_1$ we create unbiased estimates:
 
-$$\hat{Y} = \hat{\beta}_0 + \hat{\beta}_1X_1$$
+$$\hat{Y}_i = \hat{\beta}_0 + \hat{\beta}_1 X_{1i}$$
 
 Because of the assumptions we’ve made, our interpretation of the model is limited. We say that $\hat{\beta}_1$ estimates the average change in test score for every one-hour increase in study hours. But this is all a measure of association, not causation. The slope tells us what happens when X changes, but not why this occurs. This increase could be the result of something else, maybe students who study more attend class more or have more genuine interest in the subject matter. These hidden causes that affect both the predictor and the outcome are known as confounding variables.
 
@@ -85,6 +85,8 @@ In multiple regression, the variance of the estimated coefficient $\hat{\beta}_1
 
 $$Var(\hat{\beta}) = \sigma^2(X^TX)^{-1}$$
 
+(under the assumption of homoskedastic errors, where $Var(\varepsilon) = \sigma^2I$).
+
 This tells us that the precision of our estimated coefficient is influenced by the independence of each predictor from the others. If two regressors X and Z are highly correlated, the matrix $X^TX$ becomes nearly singular, and the variance formula blows up. Intuitively, as two variables move together, the model has trouble distinguishing their individual effects, leading to unstable estimates and uncertainty.
 
 Note that perfect collinearity is impossible to estimate as the model would be undefined, but severe collinearity makes standard errors large and interpretations unreliable.
@@ -107,57 +109,59 @@ If $Var(X|Z)$ is small (because they move together), we don't have as much infor
 
 ### Rubin's Causal Model
 
-Causal inference boils down to a missing data problem. How do we estimate what we can't see? This question is foundational to the Rubin Causal Model (RCM) which defines causal effects as a comparison of what would have happened to the same units under different treatments. Let's change our example and instead of studying, we've discovered a drug that condenses an entire module's worth of content into one digestible pill. We're still interested in test scores, but we want to see if our drug works.
+Causal inference boils down to a missing data problem. How do we estimate what we can't see? This question is foundational to the Rubin Causal Model (RCM), which defines causal effects as a comparison of what would have happened to the same units under different treatments. Let's change our example and instead of studying, we've discovered a drug that condenses an entire module's worth of content into one digestible pill. We're still interested in test scores, but we want to see if our drug works.
 
 Let's consider the simple case of a binary treatment, where $T_i$ represents the treatment status of the *i*th unit. $Y_i$ has two potential outcomes:
 
-Let $Y(1)$ = observed outcome of receiving treatment (uses drug and does not study).
+Let $Y(1)$ = potential outcome **under treatment** (uses drug and does not study).
 
-And $Y(0)$ = observed outcome if that same unit were in the control group (does not use drug and does not study).
+And $Y(0)$ = potential outcome **under control** (does not use drug and does not study).
 
 Before the treatment is applied, both $Y(1)$ and $Y(0)$ exist as potentials for every unit. After intervention, only one of these is observed [^3].
 
 This gives us
 
-$$Y_i=(T_i)Y_i(1) + (1-(T_i))(Y_i(0))$$
+$$Y_i = T_i Y_i(1) + (1 - T_i) Y_i(0)$$
 
-The treatment effect for the *i*th unit can be defined as $Y_i(1) - Y_i(0)$ which measures the gain in the outcome variable (test scores) under the assignment to the treatment. To statistically overcome the fundamental problem of causal inference, we want to generalize to estimate the average treatment effect rather than an individual one.
+The treatment effect for the *i*th unit can be defined as $Y_i(1) - Y_i(0)$, which measures the gain in the outcome variable (test scores) under assignment to the treatment. To statistically overcome the fundamental problem of causal inference, we want to generalize to estimate the average treatment effect rather than an individual one.
 
-$\theta = E\{Y_i(1)\} - E\{Y_i(0)\}$
+$$\theta = E\{Y_i(1)\} - E\{Y_i(0)\}$$
 
-Which can also be expressed as
+Under certain assumptions, we can express these expectations using observed data:
 
-$E\{Y_i(1)\} = E\{Y_i(1)|T_i\}$
+$$E\{Y_i(1)\} = E[\,E(Y_i \mid T_i = 1, X_i)\,], \quad E\{Y_i(0)\} = E[\,E(Y_i \mid T_i = 0, X_i)\,]$$
 
-The **independence assumption** ensures
+The **independence assumption** ensures that
 
-$\theta = E\{Y_i(1)|T_i = 1\} - E\{Y_i(0)|T_i = 0\}$
+$$\theta = E[\,E(Y_i \mid T_i = 1, X_i) - E(Y_i \mid T_i = 0, X_i)\,]$$
 
-Gives an unbiased estimate for $\theta$. We still must address **strong ignorability** [^4].
+provides an unbiased estimate for $\theta$. We still must address **strong ignorability** [^4].
 
-As defined by the RCM, to make the assumption of strong ignorability, the following must hold for each i
+As defined by the RCM, to make the assumption of strong ignorability, the following must hold for each *i*:
 
-(i) Unconfoundedness
+(i) **Unconfoundedness**
 
-$Y_i(1) - Y_i(0) \perp T|X_i$
+$$ (Y_i(1), Y_i(0)) \perp T_i \mid X_i $$
 
-This is the conditional probability of assignment to treatment given the pretreatment variable. In simple terms, the assignment to treatment ($T$) is independent of the outcomes after conditioning the pre-treatment variables. Within a subpopulation defined by the same covariate $(X_i = x)$, the assignment to treatment is as good as random, meaning it is fair to compare both treatment and control group at that level of $X$.
+This is the conditional independence of treatment assignment given the pretreatment variables. In simple terms, the assignment to treatment ($T$) is independent of the outcomes after conditioning on the pre-treatment covariates. Within a subpopulation defined by the same covariate $(X_i = x)$, the assignment to treatment is as good as random, meaning it is fair to compare both treatment and control groups at that level of $X$.
 
-When this condition holds, we are able to estimate the average treatment effect for a given subpopulation by comparing the average observed outcomes between treated and controlled units within that group. Here's what we've built mathematically:
+When this condition holds, we are able to estimate the average treatment effect for a given subpopulation by comparing the average observed outcomes between treated and control units within that group. Here's what we've built mathematically:
 
-$\theta(x) = E\{Y_i(1)|T_i = 1, X_i = x\} - E\{Y_i(0)|T_i = 0, X_i = x\}$
+$$\theta(x) = E\{Y_i(1) \mid T_i = 1, X_i = x\} - E\{Y_i(0) \mid T_i = 0, X_i = x\}$$
 
-Once unconfoundedness is satisfied, we can average $\theta(x)$ over all possible X values to get an unbiased estimator of $\theta$, the overall average treatment effect.
+Once unconfoundedness is satisfied, we can average $\theta(x)$ over all possible $X$ values to get an unbiased estimator of $\theta$, the overall average treatment effect:
 
-(ii) Overlap
+$$\theta = E_X[\theta(X)]$$
 
-$0 < P(T_i = 1|X_i = x) < 1$
+(ii) **Overlap**
 
-We call this the propensity score. For every set of pre-treatment characteristics $X_i = x$, there must be a non-zero probability that a unit with those characteristics receives the treatment AND that they receive the control. If this assumption were violated then it would be impossible to estimate the potential outcome of the unobserved group.
+$$0 < P(T_i = 1 \mid X_i = x) < 1$$
+
+The **propensity score** is defined as $e(x) = P(T_i = 1 \mid X_i = x)$. For every set of pre-treatment characteristics $X_i = x$, there must be a non-zero probability that a unit with those characteristics receives the treatment *and* that they receive the control. If this assumption were violated, it would be impossible to estimate the potential outcome of the unobserved group.
 
 ---
 
-The idea behind all of this shows ignorability implies randomization which gives us the power to say assignment to treatment is independent of potential outcomes.
+The idea behind all of this is that **randomization implies ignorability**, giving us the power to say that assignment to treatment is independent of potential outcomes.
 
 **Warning! Do NOT control post-treatment variables**
 
@@ -284,7 +288,7 @@ blog_followup = dcc.Markdown(
 ---
 
 ## Conclusion  
-We began with the age-old warning that “correlation is not causation” where we unpacked this. Along the way, we saw regression is inherently predictive, not causal, as we have to dig deeper to find the “why.” This led us to Rubin’s Causal Model, where we consider two outcomes of each unit, and recognize that only one will ever be observed. This causes us to rely on the assumption of ignorability and independence so we can achieve the gold standard of randomization in real-world data. Overall, causality boils down to a design problem. The most critical part of casual analysis happens long before .fit() is used as the computer will crunch the numbers regardless, but it’s the job of the researcher to design the experiment. If the structure of data collection is not fit for causal inference, no amount of statistical manipulation will change this.
+We began with the age-old warning that “correlation is not causation” where we unpacked this. Along the way, we saw regression is inherently predictive, not causal, as we have to dig deeper to find the “why.” This led us to Rubin’s Causal Model, where we consider two outcomes of each unit, and recognize that only one will ever be observed. This causes us to rely on the assumption of ignorability and independence so we can achieve the gold standard of randomization in real-world data. Overall, causality boils down to a design problem. The most critical part of causal analysis happens long before .fit() is used as the computer will crunch the numbers regardless, but it’s the job of the researcher to design the experiment. If the structure of data collection is not fit for causal inference, no amount of statistical manipulation will change this.
 
 In prediction, we tend to select models through metrics such as Akaike’s Information Criterion (AIC), or adjusted R-squared. But these reward the models that fit the observed data the best, not the best practices of data generation. A model can appear statistically significant, but be causally meaningless if correlation is confused for causation. Meaning, maximizing prediction can sometimes hide the causal bias we’re trying to eliminate. True causal inference relies on theoretical reasoning, not just statistical fit. 
 
@@ -300,7 +304,7 @@ In short, the best predictive model isn’t always the best causal model. Regres
 
 [^1]: Vigen, Tyler. "Spurious Correlations." Accessed October 7, 2025. https://www.tylervigen.com/spurious-correlations.
 
-[^2]: Angrist, M. Joshway. "The Long and Short of OVB." *MRU Mastering Econometrics*, Spring 2020.
+[^2]: Angrist, Joshua D. “The Long and Short of OVB.” Lecture notes, 2020. Mastering Metrics online resources. https://www.masteringmetrics.com/wp-content/uploads/2020/07/lny20n08MRU_R2.pdf
 
 [^3]: Gelman, Andrew, Jennifer Hill, and Aki Vehtari. *Regression and Other Stories* (Cambridge: Cambridge University Press, 2020), [page number].
 
