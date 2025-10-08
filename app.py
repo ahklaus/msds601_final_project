@@ -187,11 +187,31 @@ controls = dbc.Card(
     [
         html.Div(
             [
-                html.H4("Simpson's Paradox Simulator", className="card-title", style={"marginBottom": "6px"}),
-                html.Div("Adjust parameters to explore group vs aggregate trends.", style={"color": "#6c757d"}),
+                html.Div([
+                    html.H4("Simpson's Paradox Simulator", className="card-title", style={"marginBottom": "2px"}),
+                    html.Div("Explore how group-wise trends can reverse in aggregate.", style={"color": "#6c757d"}),
+                ], className="hero"),
+
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Button("Randomize", id="btn-randomize", color="primary", className="me-1"),
+                        dbc.Button("Reset", id="btn-reset", outline=True, color="secondary", className="btn-ghost"),
+                    ], md=8),
+                    dbc.Col([
+                        dbc.DropdownMenu(
+                            label="Presets",
+                            children=[
+                                dbc.DropdownMenuItem("All positive", id="preset-pos"),
+                                dbc.DropdownMenuItem("Mixed signs", id="preset-mix"),
+                                dbc.DropdownMenuItem("All negative", id="preset-neg"),
+                            ],
+                            color="light",
+                            className="float-end"
+                        )
+                    ], md=4),
+                ], className="mb-2"),
             ]
         ),
-        html.Hr(),
 
         dbc.Row([
             dbc.Col([
@@ -321,8 +341,13 @@ app.layout = dbc.Container(
     dash.Input("points-per-group", "value"),
     dash.Input({"type": "beta", "index": ALL}, "value"),
     dash.Input("seed", "value"),
+    dash.Input("btn-randomize", "n_clicks"),
+    dash.Input("btn-reset", "n_clicks"),
+    dash.Input("preset-pos", "n_clicks"),
+    dash.Input("preset-mix", "n_clicks"),
+    dash.Input("preset-neg", "n_clicks"),
 )
-def update_graph(n_groups, sigma, confound, points_per_group, beta_values, seed_text):
+def update_graph(n_groups, sigma, confound, points_per_group, beta_values, seed_text, n_rand, n_reset, n_pos, n_mix, n_neg):
     # Build betas from dynamic inputs; fallback to 1.0 if missing/invalid
     betas = []
     try:
@@ -350,6 +375,26 @@ def update_graph(n_groups, sigma, confound, points_per_group, beta_values, seed_
         except Exception:
             seed = None
 
+    # Apply actions
+    ctx = dash.callback_context
+    if ctx and ctx.triggered:
+        trig = ctx.triggered[0]["prop_id"].split(".")[0]
+        if trig == "btn-randomize":
+            seed = np.random.randint(0, 10_000_000)
+        elif trig == "btn-reset":
+            n_groups = 2
+            sigma = 1.0
+            confound = 4.0
+            points_per_group = 200
+            betas = [1.0, 1.0]
+            seed = None
+        elif trig == "preset-pos":
+            betas = [1.0] * n_groups
+        elif trig == "preset-mix":
+            betas = [1.0 if i % 2 == 0 else -1.0 for i in range(n_groups)]
+        elif trig == "preset-neg":
+            betas = [-1.0] * n_groups
+
     x, y, groups = generate_simpsons_data(
         n_groups=n_groups,
         points_per_group=int(points_per_group),
@@ -362,9 +407,14 @@ def update_graph(n_groups, sigma, confound, points_per_group, beta_values, seed_
 
     group_slopes, agg_slope = compute_slopes(x, y, groups)
     group_parts = [f"{name}: {slope:+.3f}" for name, slope in sorted(group_slopes.items())]
+    within_sign = np.sign(np.median(list(group_slopes.values()))) if group_slopes else 0
+    paradox = (within_sign != 0) and (np.sign(agg_slope) != within_sign)
+    badge = html.Span("Paradox: Yes" if paradox else "Paradox: No",
+                      className=f"badge-paradox {'badge-yes' if paradox else 'badge-no'}")
     summary = html.Div([
         html.Span("Slopes ", style={"fontWeight": 600}),
-        html.Span("(" + ", ".join(group_parts) + f")  |  Aggregate: {agg_slope:+.3f}"),
+        html.Span("(" + ", ".join(group_parts) + f")  |  Aggregate: {agg_slope:+.3f}  "),
+        badge,
     ])
 
     return fig, summary
