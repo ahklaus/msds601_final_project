@@ -1,0 +1,22 @@
+/* Slim slider handles; hide dots/marks to reduce clutter */
+.dash-slider .rc-slider-dot {
+  display: none !important;
+}
+.dash-slider .rc-slider-handle {
+  width: 12px !important;
+  height: 12px !important;
+  margin-top: -4px !important;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.06) !important;
+}
+.dash-slider .rc-slider-rail {
+  height: 6px !important;
+}
+.dash-slider .rc-slider-track {
+  height: 6px !important;
+}
+
+/* InputGroup spacing tweaks */
+.mb-2 {
+  margin-bottom: 8px !important;
+}
+

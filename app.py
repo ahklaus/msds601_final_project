@@ -8,6 +8,7 @@ from simpsons import (
     build_simpsons_figure,
     compute_slopes,
 )
+from dash.dependencies import ALL
 
 """Interactive blog + Simpson's Paradox simulation."""
 
@@ -173,7 +174,7 @@ Explain what the user will be able to explore below.
 
 ---
     """,
-    style={"fontSize": "18px", "lineHeight": "1.7em"}, mathjax=True
+    style={"fontSize": "18px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank"
 )
 
 
@@ -195,11 +196,11 @@ controls = dbc.Card(
         dbc.Row([
             dbc.Col([
                 html.Label("Groups", style={"fontWeight": 600}),
-                dcc.Slider(id="num-groups", min=2, max=5, step=1, value=2, tooltip={"placement": "bottom", "always_visible": False}),
+                dcc.Slider(id="num-groups", min=2, max=5, step=1, value=2, marks={}, tooltip={"placement": "bottom", "always_visible": False}),
             ], md=6),
             dbc.Col([
                 html.Label("Points / group", style={"fontWeight": 600}),
-                dcc.Slider(id="points-per-group", min=50, max=500, step=25, value=200, tooltip={"placement": "bottom", "always_visible": False}),
+                dcc.Slider(id="points-per-group", min=50, max=500, step=25, value=200, marks={}, tooltip={"placement": "bottom", "always_visible": False}),
             ], md=6),
         ]),
 
@@ -208,11 +209,11 @@ controls = dbc.Card(
         dbc.Row([
             dbc.Col([
                 html.Label("Noise (sigma)", style={"fontWeight": 600}),
-                dcc.Slider(id="noise", min=0, max=5, step=0.1, value=1.0, tooltip={"placement": "bottom", "always_visible": False}),
+                dcc.Slider(id="noise", min=0, max=5, step=0.1, value=1.0, marks={}, tooltip={"placement": "bottom", "always_visible": False}),
             ], md=6),
             dbc.Col([
                 html.Label("Confounding", style={"fontWeight": 600}),
-                dcc.Slider(id="confound", min=0, max=10, step=0.5, value=4.0, tooltip={"placement": "bottom", "always_visible": False}),
+                dcc.Slider(id="confound", min=0, max=10, step=0.5, value=4.0, marks={}, tooltip={"placement": "bottom", "always_visible": False}),
             ], md=6),
         ]),
 
@@ -220,8 +221,8 @@ controls = dbc.Card(
 
         dbc.Row([
             dbc.Col([
-                html.Label("Betas (comma separated)", style={"fontWeight": 600}),
-                dcc.Input(id="beta-input", value="1,1", type="text", style={"width": "100%"}),
+                html.Label("Betas", style={"fontWeight": 600}),
+                html.Div(id="beta-inputs"),
             ], md=8),
             dbc.Col([
                 html.Label("Seed", style={"fontWeight": 600}),
@@ -275,19 +276,19 @@ In short, the best predictive model isn’t always the best causal model. Regres
 
 ## References
 
-[^2]: Angrist, M. Joshway. "The Long and Short of OVB." *MRU Mastering Econometrics*, Spring 2020.
-
 [^1]: Vigen, Tyler. "Spurious Correlations." Accessed October 7, 2025. https://www.tylervigen.com/spurious-correlations.
 
-[^4]: Rubin, Donald B. "For Objective Causal Inference, Design Trumps Analysis." *Annals of Applied Statistics* 2, no. 3 (2008): 808-840. https://doi.org/10.1214/08-AOAS187.
+[^2]: Angrist, M. Joshway. "The Long and Short of OVB." *MRU Mastering Econometrics*, Spring 2020.
 
 [^3]: Gelman, Andrew, Jennifer Hill, and Aki Vehtari. *Regression and Other Stories* (Cambridge: Cambridge University Press, 2020), [page number].
+
+[^4]: Rubin, Donald B. "For Objective Causal Inference, Design Trumps Analysis." *Annals of Applied Statistics* 2, no. 3 (2008): 808-840. https://doi.org/10.1214/08-AOAS187.
 
 [^5]: Pearl, Judea, Madelyn Glymour, and Nicholas P. Jewell. *Causal Inference in Statistics: A Primer*. Chichester, UK: Wiley, 2016.
 
 [^6]: Selvitella, Alessandro. "The Ubiquity of the Simpson's Paradox." *Journal of Statistical Distributions and Applications* 4, no. 2 (2017). https://doi.org/10.1186/s40488-017-0056-5.
     """,
-    style={"fontSize": "18px", "lineHeight": "1.7em"},
+    style={"fontSize": "18px", "lineHeight": "1.7em"}, link_target="_blank"
 )
 
 # ---------- APP LAYOUT ----------
@@ -316,14 +317,16 @@ app.layout = dbc.Container(
     dash.Input("noise", "value"),
     dash.Input("confound", "value"),
     dash.Input("points-per-group", "value"),
-    dash.Input("beta-input", "value"),
+    dash.Input({"type": "beta", "index": ALL}, "value"),
     dash.Input("seed", "value"),
 )
-def update_graph(n_groups, sigma, confound, points_per_group, beta_text, seed_text):
+def update_graph(n_groups, sigma, confound, points_per_group, beta_values, seed_text):
+    # Build betas from dynamic inputs; fallback to 1.0 if missing/invalid
+    betas = []
     try:
-        betas = [float(x.strip()) for x in str(beta_text).split(",") if x.strip() != ""]
+        betas = [float(v) if v is not None and str(v) != "" else 1.0 for v in beta_values]
     except Exception:
-        betas = [1.0] * int(n_groups)
+        pass
 
     if not isinstance(n_groups, int):
         try:
@@ -332,7 +335,11 @@ def update_graph(n_groups, sigma, confound, points_per_group, beta_text, seed_te
             n_groups = 2
 
     if len(betas) != n_groups:
-        betas = [1.0] * n_groups
+        # pad or trim to match selected n_groups
+        if len(betas) < n_groups:
+            betas = (betas + [1.0] * n_groups)[:n_groups]
+        else:
+            betas = betas[:n_groups]
 
     seed = None
     if str(seed_text).strip() != "":
@@ -359,6 +366,29 @@ def update_graph(n_groups, sigma, confound, points_per_group, beta_text, seed_te
     ])
 
     return fig, summary
+
+
+@app.callback(
+    dash.Output("beta-inputs", "children"),
+    dash.Input("num-groups", "value"),
+)
+def render_beta_inputs(n_groups):
+    try:
+        n = int(n_groups)
+    except Exception:
+        n = 2
+    rows = []
+    for i in range(n):
+        rows.append(
+            dbc.InputGroup(
+                [
+                    dbc.InputGroupText(f"β{i+1}"),
+                    dbc.Input(id={"type": "beta", "index": i}, type="number", step=0.1, value=1.0, debounce=True),
+                ],
+                className="mb-2",
+            )
+        )
+    return rows
 
 
 if __name__ == "__main__":
