@@ -9,6 +9,8 @@ This repository contains a Plotly Dash application that presents a blog-style wr
 python -m venv .venv
 
 # 2) Activate it
+source .venv/bin/activate 
+OR
 .\.venv\Scripts\Activate.ps1
 
 # 3) Install dependencies
