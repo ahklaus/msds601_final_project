@@ -3,6 +3,7 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
+from dash import dcc
 
 # Example data for demo (you can remove this)
 df = px.data.gapminder().query("year == 2007")
@@ -16,23 +17,24 @@ app.title = "My Interactive Blog"
 # Use ###, ####, and **bold/italic** syntax for structure.
 
 blog_content = dcc.Markdown(r"""
-# Title of Your Blog Post
-*(Subtitle or tagline if you want one)*  
+# Causal Inference in Regression
+*MSDS601 Final Project Amelia Klaus, Rodrigo Cuadra, & Rory Mackintosh *  
 
 ---
 
-## Introduction  
-Ask anyone with a high school diploma what they remember and you’ll usually get one of two answers: “the mitochondria is the powerhouse of the cell” or “correlation is not causation.” I’m not here to talk about cellular real estate so today we will be covering the latter. In principle, the phrase is quite self-explanatory: correlation is merely an association of two pieces of data whereas causation occurs when one event directly contributes to the occurrence of the other.
+## The Two Faces of Regression: Association and Causation  
+Ask anyone with a high school diploma what they remember and you’ll usually get one of two answers: “the mitochondria is the powerhouse of the cell” or “correlation is not causation.” While the biology fact still stands, our focus today is on the second truth. In principle, the phrase is quite self-explanatory: correlation is merely an association of two pieces of data whereas causation occurs when one event directly contributes to the occurrence of the other. 
 
-![Correlation vs Causation](image1.png)
+![Correlation vs Causation](/assets/image1.png)
 
-There are countless instances of correlated events not having a causal relationship, such as the increase in associate degrees awarded in science technologies and google searches for “avocado toast.” Does this mean that as students developed their engineering skills their entire career was leading to the breakthrough of engineering the perfect avocado toast? Not quite. More of these examples can be found on Tyler Vigen’s project on suspicious correlations. 
+There are countless instances of correlated events not having a causal relationship, such as the increase in associate degrees awarded in science technologies and google searches for “avocado toast.” Does this mean that as students developed their engineering skills their entire career was leading to the breakthrough of engineering the perfect avocado toast? Not quite. More of these examples can be found on [Tyler Vigen’s project on *Spurious Correlations*](https://www.tylervigen.com/spurious-correlations) [^1].
+
  
 Though in reverse, we cannot have causation without correlation. This leads us to question the other requirements for causal relationships, at what point can we say the perfection of avocado toast was caused by the increase in associate degrees awarded in science technologies?
 
-Before we get there, it’s important to look at the inferences of regression, specifically, the difference between prediction and causal inference. Prediction involves the comparison of outcomes between different units. An example of this would be comparing the test scores of two students: one who studied for the test and one who did not. Causal inference takes the same unit and examines multiple outcomes. This type of inference addresses the issue of “correlation is not causation” because it fixates on cause-and-effect relationships to draw conclusions beyond statistical association.  
+Before we get there, it’s important to look at the inferences of regression, specifically, the difference between prediction and causal inference. Prediction involves the comparison of outcomes between different units. An example of this would be comparing the test scores of two students: one who studied for the test and one who did not. Causal inference takes the same unit and examines multiple outcomes. How would student A’s test score differ if they studied versus if they didn’t? This type of inference addresses the issue of “correlation is not causation” because it fixates on cause-and-effect relationships to draw conclusions beyond statistical association. 
 
-Standard regression is a tool built for prediction, not causation. So to be able to draw causal conclusions from regression models, we must focus on strict assumptions and frameworks. Going forward, we will explore different types of data collection, including the gold standard of randomized experiments and struggles with observational data, and helpful graphical and outcome frameworks we can use.
+Standard regression is a tool built for prediction, not causation. So to be able to draw causal conclusions from regression models, we must focus on strict assumptions and frameworks. Going forward, we will tackle the fundamental problem with causal inference, a framework to define and identify causal effects, and a real-world example using Simpon’s Paradox.
 
 ### The Fundamental Problem
   
@@ -41,18 +43,17 @@ Now where exactly is the problem with causal inference? To visualize this, I lik
 - Choice 1: Do not study. Get a solid night’s sleep and hope that a rested mind will carry you through it (or you’re just drawing bunnies the entire time).
 - Choice 2: Study. Sacrifice sleep, cram all night, and hope the extra studying pays off.
 
-In your head, you can play out both timelines. Maybe in Option A, you bomb the exam, flunk out of your program, and end up juggling on the street for cash. Or in Option B, you ace the exam and the class, impress your professor, and land your dream job on behalf of your academic merit.
+In your head, you can play out both timelines. Maybe in choice 1, you bomb the exam and flunk out of your program. Alternatively, in choice 2, you ace the exam and the class, impress your professor, and land your dream job on behalf of your academic merit.
 
-But in reality, you only get to live one of those outcomes. In this case, you either sleep or you don't, which determines the test score you receive. The other path is forever unknowable. Introducing the fundamental problem of causal inference: for any individual, we can only observe the outcome of the decision they actually made and not the alternative reality. Ideally, we, as model engineers, want to know how outcomes, test scores, would change due to different treatments, studying done. Regression only provides access to the single outcome of the choice that was made, but the counterfactuals, or the roads not taken, are always missing.
-   
+But in reality, you only get to live one of those outcomes. In this case, you either sleep or you don't, which determines the test score you receive. The other path is forever unknowable. Introducing the fundamental problem of causal inference: for any individual, we can only observe the outcome of the decision they actually made and not the alternative reality. Ideally, we want to know how outcomes (test scores here) would change due to different treatments (studying). Regression only provides access to the single outcome of the choice that was made, but the counterfactuals, or the roads not taken, are always missing.  
 ### SLR, MLR, and Multicollinearity
-In the context of simple linear regression, take the example above of predicting exam scores, Y, from study hours, X1. To build a simple regression model we hypothesize the model to be of the form
+In the context of simple linear regression, take the example above of predicting exam scores, $Y$, from study hours, $X_1$. To build a simple regression model we hypothesize the model to be of the form
 
-$$Y = \beta_0 + \beta_1(\text{Study Hours}) + \epsilon$$
+$$Y = \beta_0 + \beta_1X_1 + \epsilon$$
 
-Though since we will never truly know the values of $\beta_0$ and $\beta_1$ we create estimates:
+Though, since we will never truly know the values of $\beta_0$ and $\beta_1$ we create unbiased estimates:
 
-$$\hat{Y} = \hat{\beta}_0 + \hat{\beta}_1(\text{Study Hours})$$
+$$\hat{Y} = \hat{\beta}_0 + \hat{\beta}_1X_1$$
 
 Because of the assumptions we’ve made, our interpretation of the model is limited. We say that $\hat{\beta}_1$ estimates the average change in test score for every one-hour increase in study hours. But this is all a measure of association, not causation. The slope tells us what happens when X changes, but not why this occurs. This increase could be the result of something else, maybe students who study more attend class more or have more genuine interest in the subject matter. These hidden causes that affect both the predictor and the outcome are known as confounding variables.
 
@@ -64,67 +65,59 @@ Now, returning to our model above, let’s add a confounder: a student’s inter
 
 $$Y_i = \beta_0 + \beta_1(X_i) + \beta_2(Z_i) + \epsilon_i$$
 
-If we look back at our originally proposed simpler model, the OLS estimator for $\beta_1$ becomes biased.
+If we look back at our proposed simpler model, the ordinary least squares estimate for $\beta_1$ becomes biased.
 
 The simple regression estimate $\tilde{\beta}_1$ is biased because X (study hours) and the omitted variable Z (interest) are correlated.
 
 $$\tilde{\beta}_1 = \beta_1 + \beta_2 \frac{\text{Cov}(X,Z)}{\text{Var}(X)}$$
 
-This shows us the bias that comes from omitted variables, unless either $\beta_2$ (interest has no effect on exam performance) or Cov(X,Z) = 0 (interest is independent of study hours) then our estimated slope for study hours ( β1^) is biased.  
-So the solution here is multiple linear regression (MLR) so we can include all confounding variables.  
+This illustrates how omitted variables introduce bias: unless $\beta_2 = 0$ (interest has no effect on exam performance) or Cov(X,Z) = 0 (interest is independent of study hours) then our estimated slope for study hours ($\hat{\beta}_1$) is biased [^2].  
 
-The case of Multiple Linear Regression (MLR)  
-In the multiple regression case, the variance of the estimated coefficient $\hat{\beta}_1$ is given by:  
+The solution here is multiple linear regression (MLR) where we can include all confounding variables.   
 
-$$
-\text{Var}(\hat{\beta}_1) = \frac{\sigma^2}{(1 - R^2_{(X*Z)}) \cdot n \cdot \text{Var}(X)}
-$$
+** The Case of Multiple Linear Regression (MLR) and Multicollinearity**
 
-Where  
-$R^2_{(X*Z)}$= coefficient of determination from regression X onto Z  
-$\sigma^2$ = residual variance  
-n = sample size  
-
-As $R^2_{(X*Z)}$ -> 1 (X and Z are almost perfectly collinear), the denominator approaches zero and the $\text{Var}(\hat{\beta}_1)$ explodes.  
-Note that they can never be collinear as the variance would be undefined.  
-
-This means that while including Z (interest) corrects bias in theory, it destabilizes the estimate of the causal effect by inflating uncertainty because the variance inflation factor (VIF) increases with multicollinearity.
-
-**Multicollinearity in Prediction vs. Causal Models**
-
-This is where prediction models differ from causal models. With causal models, our overarching goal is to reduce bias so we can make that ultimate causal inference. To achieve this, we must ensure we have an unbiased causal estimator, which means all the relevant confounders are included in the model.
-
-This begs the question of multicollinearity, does this mean that causal models favor multicollinear terms? Not necessarily.
-
-In MLR for prediction, multicollinearity is a numerical issue. if two regressors X and Z are highly correlated, the matrix $X^TX$ becomes nearly singular, and the OLS variance formula blows up:
+In multiple regression, the variance of the estimated coefficient $\hat{\beta}_1$ is determined by the structure of $X$. Specifically,  
 
 $$Var(\hat{\beta}) = \sigma^2(X^TX)^{-1}$$
 
-This is often indicative of large standard errors, and unreliable coefficient interpretations. That said, OLS remains unbiased, our predictions just become messier.
+This tells us that the precision of our estimated coefficient is influenced by the independence of each predictor from the others. If two regressors X and Z are highly correlated, the matrix $X^TX$ becomes nearly singular, and the variance formula blows up. Intuitively, as two variables move together, the model has trouble distinguishing their individual effects, leading to unstable estimates and uncertainty.
 
-Now looking at MLR for causation, we want to know if the variation in X is independent (enough) of confounders. If X and our confounder Z are nearly collinear, then after we control Z we are left with little independent variation in X. Mathematically,
+Note that perfect collinearity is impossible to estimate as the model would be undefined, but severe collinearity makes standard errors large and interpretations unreliable.
+
+This means that while including Z (interest) corrects bias in theory, it destabilizes the estimate of the causal effect by inflating uncertainty because the variance inflation factor (VIF) increases with multicollinearity.
+
+** Multicollinearity**
+
+This is where prediction models differ from causal models. With causal models, our overarching goal is to reduce bias so we can make that ultimate causal inference. To achieve this, we must ensure we have an unbiased causal estimator, which means all the relevant confounders are included in the model.
+
+Does this mean that causal models favor multicollinear terms? Not necessarily. 
+
+In MLR for prediction, multicollinearity is a numerical issue. It makes coefficients harder to interpret, though the predictions remain unbiased, just messier.  
+
+Now looking at MLR for causation, we want to know if the variation in $X$ is independent (enough) of confounders. If $X$ and our confounder $Z$ are nearly collinear, then after we control $Z$ we are left with little independent variation in $X$. Mathematically,
 
 $$\hat{\beta}_1 = \frac{Cov(Y,X|Z)}{Var(X|Z)}$$
 
-If Var(X|Z) is small (because they move together), we don't have as much information to estimate the causal effect. So multicollinearity here results in the loss of the ability to identify causality. 
+If $Var(X|Z)$ is small (because they move together), we don't have as much information to estimate the causal effect. Here, multicollinearity results in the loss of the ability to identify causality. 
 
-### Rubin Causal Model
+### Rubin's Causal Model
 
-So causal inference boils down to a missing data problem. How do we estimate what we can't see? This question is foundational to the Rubin Causal Model (RCM) which defines causal effects as a comparison of what would have happened to the same units under different treatments. Let's change our example and instead of studying, we've discovered a drug that condenses an entire module's worth of content into one digestible pill. We're still interested in test scores, but we want to see if our drug works.
+Causal inference boils down to a missing data problem. How do we estimate what we can't see? This question is foundational to the Rubin Causal Model (RCM) which defines causal effects as a comparison of what would have happened to the same units under different treatments. Let's change our example and instead of studying, we've discovered a drug that condenses an entire module's worth of content into one digestible pill. We're still interested in test scores, but we want to see if our drug works.
 
-So let's consider the simple case of a binary treatment, where $T_i$ represents the treatment status of the *i*th unit. $Y_i$ has two potential outcomes:
+Let's consider the simple case of a binary treatment, where $T_i$ represents the treatment status of the *i*th unit. $Y_i$ has two potential outcomes:
 
-Let $Y(1)$ = observed outcome of receiving treatment (uses drug and does not study)
+Let $Y(1)$ = observed outcome of receiving treatment (uses drug and does not study).
 
 And $Y(0)$ = observed outcome if that same unit were in the control group (does not use drug and does not study).
 
-Before the treatment is applied, both $Y(1)$ and $Y(0)$ exist as potentials for every unit (randomization). After intervention, only one of these is observed.
+Before the treatment is applied, both $Y(1)$ and $Y(0)$ exist as potentials for every unit. After intervention, only one of these is observed [^3].
 
 This gives us
 
 $$Y_i=(T_i)Y_i(1) + (1-(T_i))(Y_i(0))$$
 
-The treatment effect for the *i*th unit can be defined as $Y_i(1) - Y_i(0)$ which measures the gain in the outcome variable (test scores) under the assignment to the treatment. Now to statistically overcome the fundamental problem of causal inference, we want to generalize to estimate the average treatment effect rather than an individual one.
+The treatment effect for the *i*th unit can be defined as $Y_i(1) - Y_i(0)$ which measures the gain in the outcome variable (test scores) under the assignment to the treatment. To statistically overcome the fundamental problem of causal inference, we want to generalize to estimate the average treatment effect rather than an individual one.
 
 $\theta = E\{Y_i(1)\} - E\{Y_i(0)\}$
 
@@ -134,46 +127,40 @@ $E\{Y_i(1)\} = E\{Y_i(1)|T_i\}$
 
 The **independence assumption** ensures
 
-$\theta = E\{Yi(1)|Ti = 1\} - E\{Yi(0)|Ti = 0\}$
+$\theta = E\{Y_i(1)|T_i = 1\} - E\{Y_i(0)|T_i = 0\}$
 
-Gives an unbiased estimate for $\theta$
-
-Now to address **strong ignorability**
-
-# Observational Studies, Strong Ignorability, and Randomization
-
-We've addressed the fundamental problem with causal inference, but this makes it tricky to interpret real-world data. Most data is observational where people opt into a treatment. Sicker patients are more likely to take a drug. Now, it is possible to draw causal inferences from observational data, but it requires an assumption, namely, the ignorable treatment assignment assumption. This assumption states that, conditional on observed pre-treatment covariates X, the assignment to treatment is independent of the potential outcomes (Y0, Y1). This means that measuring and controlling all confounding variables, X, that influence treatment decision and outcome, then the treatment assignment can be viewed as random.
+Gives an unbiased estimate for $\theta$. We still must address **strong ignorability** [^4].
 
 As defined by the RCM, to make the assumption of strong ignorability, the following must hold for each i
 
 (i) Unconfoundedness
 
-$Yi(1) - Yi(0) \perp T|Xi$
+$Y_i(1) - Y_i(0) \perp T|X_i$
 
-This is the conditional probability of assignment to treatment given the pretreatment variable. In simple terms, the assignment to treatment (T) is independent of the outcomes after conditioning the observed pre-treatment variables (X). So within a subpopulation defined by the same covariate $(Xi = x)$ the assignment to treatment is as good as random, meaning it is fair to compare both treatment and control group at that level of X.
+This is the conditional probability of assignment to treatment given the pretreatment variable. In simple terms, the assignment to treatment ($T$) is independent of the outcomes after conditioning the pre-treatment variables. Within a subpopulation defined by the same covariate $(X_i = x)$, the assignment to treatment is as good as random, meaning it is fair to compare both treatment and control group at that level of $X$.
 
-When this condition holds, we are able to estimate the average treatment effect for a given subpopulation $(\theta(x))$ by comparing the average observed outcomes between treated and controlled units within that group. So what we're building up to mathematically,
+When this condition holds, we are able to estimate the average treatment effect for a given subpopulation by comparing the average observed outcomes between treated and controlled units within that group. Here's what we've built mathematically:
 
-$\theta(x) = E\{Yi(1)|Ti = 1, Xi = x\} - E\{Yi(0)|Ti = 0, Xi = x\}$
+$\theta(x) = E\{Y_i(1)|T_i = 1, X_i = x\} - E\{Y_i(0)|T_i = 0, X_i = x\}$
 
-So once unconfoundedness is satisfied, we can average $\theta(x)$ over all possible X values to get an unbiased estimator of $\theta$, the overall average treatment effect.
+Once unconfoundedness is satisfied, we can average $\theta(x)$ over all possible X values to get an unbiased estimator of $\theta$, the overall average treatment effect.
 
 (ii) Overlap
 
-$0 < P(Ti = 1|Xi = x) < 1$
+$0 < P(T_i = 1|X_i = x) < 1$
 
-We call this the propensity score. In english: for every set of pre-treatment characteristics $X = x$, there must be a non-zero probability that a unit with those characteristics receives the treatment AND that they receive the control. If this assumption were violated for some x value, then units with that characteristics would be found only in the treatment or only in the control group. Then it would be impossible to estimate the potential outcome of the unobserved group.
+We call this the propensity score. For every set of pre-treatment characteristics $X_i = x$, there must be a non-zero probability that a unit with those characteristics receives the treatment AND that they receive the control. If this assumption were violated then it would be impossible to estimate the potential outcome of the unobserved group.
 
 ---
 
-The idea behind all of this is that ignorability implies randomization which gives us the power to say assignment to treatment is independent of potential outcomes.
+The idea behind all of this shows ignorability implies randomization which gives us the power to say assignment to treatment is independent of potential outcomes.
 
 **Warning! Do NOT control post-treatment variables**
 
-Though it was perfectly fine to take pre-treatment variables into account, variables measured before the treatment were not impacted by the treatment, but measuring a variable after treatment can introduce bias and invalidate the causal estimate, even if we properly randomized! The reason behind this is because we are comparing groups that are fundamentally different. Comparing treatment and control groups on the basis of some outcome score is inherently biased because each individual likely had different potentials long before the experiment took place.
+Though it was perfectly fine to take pre-treatment variables into account, variables measured before the treatment were not impacted by the treatment, but measuring a variable after treatment can introduce bias and invalidate the causal estimate, even if we properly randomized! This is because we are comparing groups that are fundamentally different. Comparing treatment and control groups on the basis of some outcome score is inherently biased because each individual likely had different potentials long before the experiment took place [^5].
 
 ### Simpson's Paradox
-To put together all that we’ve discussed so far, let’s look at a real-world example of how regression can be misleading through Simpson’s Paradox. Simpson’s Paradox occurs where an association, or trend, that appears in an entire population is reversed when looking at subpopulations. For instance, a simple linear regression might show that X increases Y, but when we split the data by another variable, Z, each subgroup shows the opposite trend.
+To put together all that we’ve discussed so far, let’s look at a real-world example of how regression can be misleading through Simpson’s Paradox. Simpson’s Paradox occurs where an association, or trend, that appears in an entire population is reversed when looking at subpopulations. For instance, a simple linear regression might show that X increases Y, but when we split the data by another variable, Z, each subgroup shows the opposite trend [^6].
 
 How can both of these associations be true? The answer lies in the confounding variables we discussed earlier. Since Z influences both X and Y, it distorts their relationship when combining data. By identifying Z, we’ve found a true causal predictor as the relationship between X and Y fades. Simpson’s Paradox is less of a paradox, and more of a design problem. Ignoring our confounders can lead to a completely different analysis of our data.
 
@@ -236,17 +223,25 @@ In prediction, we tend to select models through metrics such as Akaike’s Infor
 
 In short, the best predictive model isn’t always the best causal model. Regression helps us describe the world as it is, but causal inference helps us imagine the world that could’ve been. So we end here where we began: correlation may start the story, but only causation writes the plot.
 
-
-
-### Key Ideas  
-Use bullet points, **bold text**, or even inline equations like `Y = β₀ + β₁X`.
-
-> 💡 You can include callouts, quotes, or tips like this.
-
-
 ---
 
 *Thanks for reading!*
+
+
+
+## References
+
+[^2]: Angrist, M. Joshway. "The Long and Short of OVB." *MRU Mastering Econometrics*, Spring 2020.
+
+[^1]: Vigen, Tyler. "Spurious Correlations." Accessed October 7, 2025. https://www.tylervigen.com/spurious-correlations.
+
+[^4]: Rubin, Donald B. "For Objective Causal Inference, Design Trumps Analysis." *Annals of Applied Statistics* 2, no. 3 (2008): 808-840. https://doi.org/10.1214/08-AOAS187.
+
+[^3]: Gelman, Andrew, Jennifer Hill, and Aki Vehtari. *Regression and Other Stories* (Cambridge: Cambridge University Press, 2020), [page number].
+
+[^5]: Pearl, Judea, Madelyn Glymour, and Nicholas P. Jewell. *Causal Inference in Statistics: A Primer*. Chichester, UK: Wiley, 2016.
+
+[^6]: Selvitella, Alessandro. "The Ubiquity of the Simpson's Paradox." *Journal of Statistical Distributions and Applications* 4, no. 2 (2017). https://doi.org/10.1186/s40488-017-0056-5.
     """,
     style={"fontSize": "18px", "lineHeight": "1.7em"},
 )
