@@ -145,8 +145,14 @@ def build_simpsons_figure(x, y, groups):
         paper_bgcolor="#ffffff",
         plot_bgcolor="#ffffff",
         font=dict(family="Inter, Segoe UI, system-ui, -apple-system", size=15),
-        margin=dict(l=40, r=30, t=60, b=40),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=40, r=160, t=60, b=40),
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=1,
+            xanchor="left",
+            x=1.02,
+        ),
         xaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.06)"),
         yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.06)"),
     )
