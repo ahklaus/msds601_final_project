@@ -33,6 +33,11 @@ body, html {
   font-size: 15px; /* slightly smaller base for less zoomed-in feel */
 }
 
+/* Hide the illustrative image in the text since we add a styled graph below */
+img[src*="/assets/image1.png"] {
+  display: none;
+}
+
 .hero {
   background: linear-gradient(135deg, #f8f9fa 0%, #eef2f7 100%);
   border: 1px solid rgba(0,0,0,0.04);

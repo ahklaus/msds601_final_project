@@ -45,6 +45,59 @@ Before we get there, it’s important to look at the inferences of regression, s
 Standard regression is a tool built for prediction, not causation. So to be able to draw causal conclusions from regression models, we must focus on strict assumptions and frameworks. Going forward, we will tackle the fundamental problem with causal inference, a framework to define and identify causal effects, and a real-world example using Simpson’s Paradox.
 """, style={"fontSize": "16px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank")
 
+# Static viz replacing the above illustrative image (keeps blog text unchanged; image hidden via CSS)
+years = [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]
+degrees_awarded = [1930, 2175, 2293, 2398, 2528, 2956, 3385, 3427, 3491, 3991, 3770]
+avocado_search = [1.0, 1.08333, 2.5, 5.16667, 12.25, 24.0, 42.25, 49.0, 56.0, 72.75, 65.25]
+
+vigen_fig = go.Figure()
+vigen_fig.add_trace(
+    go.Scatter(
+        x=years,
+        y=degrees_awarded,
+        mode="lines+markers",
+        name="Degrees awarded",
+        line=dict(color="#4e79a7", width=3),
+        marker=dict(size=7, color="#4e79a7"),
+        hovertemplate="Year=%{x}<br>Degrees=%{y:,}<extra></extra>",
+    )
+)
+vigen_fig.add_trace(
+    go.Scatter(
+        x=years,
+        y=avocado_search,
+        mode="lines+markers",
+        name="Rel. search volume",
+        line=dict(color="#e15759", width=3),
+        marker=dict(size=7, color="#e15759"),
+        hovertemplate="Year=%{x}<br>Search vol=%{y:.2f}<extra></extra>",
+        yaxis="y2",
+    )
+)
+vigen_fig.update_layout(
+    title=("Associates degrees awarded in Science technologies vs Google searches for 'avocado toast'"),
+    xaxis_title="Year",
+    yaxis_title="Degrees awarded",
+    template="plotly_white",
+    paper_bgcolor="#ffffff",
+    plot_bgcolor="#ffffff",
+    font=dict(family="Inter, Segoe UI, system-ui, -apple-system", size=15),
+    margin=dict(l=40, r=160, t=70, b=40),
+    legend=dict(orientation="v", yanchor="top", y=1, xanchor="left", x=1.02),
+    xaxis=dict(dtick=1, showgrid=True, gridcolor="rgba(0,0,0,0.06)"),
+    yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.06)"),
+    yaxis2=dict(title="Rel. search volume", overlaying="y", side="right", showgrid=False),
+)
+
+vigen_card = dbc.Card([
+    dcc.Graph(
+        id="vigen-graph",
+        figure=vigen_fig,
+        config={"staticPlot": True, "displaylogo": False},
+        style={"height": "520px"},
+    )
+], body=True)
+
 md_fundamental = dcc.Markdown(r"""
 ### The Fundamental Problem
   
@@ -492,6 +545,7 @@ app.layout = html.Div([
 
                 html.Div(id="two-faces", className="section-anchor"),
                 md_two_faces,
+                vigen_card,
 
                 html.Div(id="fundamental", className="section-anchor"),
                 md_fundamental,
