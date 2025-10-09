@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: msds601-final-project
+    env: python
+    buildCommand: python -m pip install -r requirements.txt
+    startCommand: python -m gunicorn app:server --workers 2 --threads 4 --timeout 60
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+
+

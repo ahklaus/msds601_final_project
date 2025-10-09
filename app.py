@@ -15,6 +15,7 @@ from dash.dependencies import ALL
 # Initialize app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 app.title = "My Interactive Blog"
+server = app.server
 
 # ---------- BLOG CONTENT SECTION ----------
 # You can paste your blog paragraphs here as Markdown.
@@ -448,4 +449,6 @@ def render_beta_inputs(n_groups):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", "8050"))
+    app.run(host="0.0.0.0", port=port, debug=False)

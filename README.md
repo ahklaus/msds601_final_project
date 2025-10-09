@@ -23,6 +23,32 @@ python app.py
 
 After starting, the Dash development server prints a local URL (typically `http://127.0.0.1:8050`). Open it in your browser.
 
+## Deploying on Render.com
+
+This app is ready for Render. Key points:
+
+- The Dash app now exposes `server` in `app.py` and reads the `PORT` env var.
+- `gunicorn` is included in `requirements.txt` and used to serve the app in production.
+- Create a new Web Service on Render pointing to this repo with:
+  - Runtime: Python
+  - Build command: `python -m pip install -r requirements.txt`
+  - Start command: `python -m gunicorn app:server --workers 2 --threads 4 --timeout 60`
+  - Environment: `PYTHON_VERSION` (e.g., 3.11), optional `DASH_DEBUG=False`
+
+Alternatively, add a `render.yaml` at the repo root:
+
+```yaml
+services:
+  - type: web
+    name: msds601-final-project
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:server --workers 2 --threads 4 --timeout 60
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+```
+
 ## Project Structure
 
 - `app.py`: Dash application with blog content and an interactive example using Plotly Express.
