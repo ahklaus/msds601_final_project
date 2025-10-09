@@ -137,9 +137,9 @@ If we look back at our proposed simpler model, the ordinary least squares estima
 
 The simple regression estimate $\tilde{\beta}_1$ is biased because X (study hours) and the omitted variable Z (interest) are correlated.
 
-$$\tilde{\beta}_1 = \beta_1 + \beta_2 \frac{\text{Cov}(X,Z)}{\text{Var}(X)}$$
+$$\tilde{\beta}_1 = \beta_1 + \beta_2 \frac{\text{Cov}(X,Z)}{\text{Var}(X)}$$ [^2]
 
-This illustrates how omitted variables introduce bias: unless $\beta_2 = 0$ (interest has no effect on exam performance) or Cov(X,Z) = 0 (interest is independent of study hours) then our estimated slope for study hours ($\hat{\beta}_1$) is biased [^2].  
+This illustrates how omitted variables introduce bias: unless $\beta_2 = 0$ (interest has no effect on exam performance) or Cov(X,Z) = 0 (interest is independent of study hours) then our estimated slope for study hours ($\hat{\beta}_1$) is biased.  
 
 The solution here is multiple linear regression (MLR) where we can include all confounding variables.   
 
@@ -183,11 +183,11 @@ Let $Y(1)$ = potential outcome **under treatment** (uses drug and does not study
 
 And $Y(0)$ = potential outcome **under control** (does not use drug and does not study).
 
-Before the treatment is applied, both $Y(1)$ and $Y(0)$ exist as potentials for every unit. After intervention, only one of these is observed [^3].
+Before the treatment is applied, both $Y(1)$ and $Y(0)$ exist as potentials for every unit. After intervention, only one of these is observed.
 
 This gives us
 
-$$Y_i = T_i Y_i(1) + (1 - T_i) Y_i(0)$$
+$$Y_i = T_i Y_i(1) + (1 - T_i) Y_i(0)$$ [^3]
 
 The treatment effect for the *i*th unit can be defined as $Y_i(1) - Y_i(0)$, which measures the gain in the outcome variable (test scores) under assignment to the treatment. To statistically overcome the fundamental problem of causal inference, we want to generalize to estimate the average treatment effect rather than an individual one.
 
@@ -199,17 +199,17 @@ $$E\{Y_i(1)\} = E[\,E(Y_i \mid T_i = 1, X_i)\,], \quad E\{Y_i(0)\} = E[\,E(Y_i \
 
 The **independence assumption** ensures that
 
-$$\theta = E[\,E(Y_i \mid T_i = 1, X_i) - E(Y_i \mid T_i = 0, X_i)\,]$$
+$$\theta = E[\,E(Y_i \mid T_i = 1, X_i) - E(Y_i \mid T_i = 0, X_i)\,]$$ [^3]
 
-provides an unbiased estimate for $\theta$. We still must address **strong ignorability** [^4].
+provides an unbiased estimate for $\theta$. We still must address **strong ignorability**.
 
 As defined by the RCM, to make the assumption of strong ignorability, the following must hold for each *i*:
 
 (i) **Unconfoundedness**
 
-$$ (Y_i(1), Y_i(0)) \perp T_i \mid X_i $$
+$$(Y_i(1), Y_i(0)) \bot Z_i \mid X_i$$ [^3]
 
-This is the conditional independence of treatment assignment given the pretreatment variables. In simple terms, the assignment to treatment ($T$) is independent of the outcomes after conditioning on the pre-treatment covariates. Within a subpopulation defined by the same covariate $(X_i = x)$, the assignment to treatment is as good as random, meaning it is fair to compare both treatment and control groups at that level of $X$.
+This is the conditional independence of treatment assignment given the pretreatment variables. In simple terms, the assignment to treatment ($T$) is independent of the outcomes after conditioning on the pre-treatment covariates. Within a subpopulation defined by the same covariate $(X_i = x)$, the assignment to treatment is as good as random, meaning it is fair to compare both treatment and control groups at that level of $X$ [^4].
 
 When this condition holds, we are able to estimate the average treatment effect for a given subpopulation by comparing the average observed outcomes between treated and control units within that group. Here's what we've built mathematically:
 
@@ -221,9 +221,9 @@ $$\theta = E_X[\theta(X)]$$
 
 (ii) **Overlap**
 
-$$0 < P(T_i = 1 \mid X_i = x) < 1$$
+$$0 < P(T_i = 1 \mid X_i = x) < 1$$ [^3]
 
-The **propensity score** is defined as $e(x) = P(T_i = 1 \mid X_i = x)$. For every set of pre-treatment characteristics $X_i = x$, there must be a non-zero probability that a unit with those characteristics receives the treatment *and* that they receive the control. If this assumption were violated, it would be impossible to estimate the potential outcome of the unobserved group.
+The **propensity score** is defined as $e(x) = P(T_i = 1 \mid X_i = x)$. For every set of pre-treatment characteristics $X_i = x$, there must be a non-zero probability that a unit with those characteristics receives the treatment *and* that they receive the control. If this assumption were violated, it would be impossible to estimate the potential outcome of the unobserved group [^3].
 
 ---
 
@@ -376,7 +376,7 @@ md_references = dcc.Markdown(
 
 [^2]: Angrist, Joshua D. “The Long and Short of OVB.” Lecture notes, 2020. Mastering Metrics online resources. https://www.masteringmetrics.com/wp-content/uploads/2020/07/lny20n08MRU_R2.pdf
 
-[^3]: Gelman, Andrew, Jennifer Hill, and Aki Vehtari. *Regression and Other Stories* (Cambridge: Cambridge University Press, 2020), [page number].
+[^3]: Wang, Jinfang. "Rubin's Model for Causal Inference: A Review." *RIMS Kokyuroku* 1703 (August 2010): 138-150. http://hdl.handle.net/2433/170020.
 
 [^4]: Rubin, Donald B. "For Objective Causal Inference, Design Trumps Analysis." *Annals of Applied Statistics* 2, no. 3 (2008): 808-840. https://doi.org/10.1214/08-AOAS187.
 
