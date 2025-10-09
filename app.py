@@ -29,14 +29,16 @@ md_header = dcc.Markdown(r"""
 ---
 """, style={"fontSize": "16px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank")
 
-md_two_faces = dcc.Markdown(r"""
+md_two_faces_top = dcc.Markdown(r"""
 ## The Two Faces of Regression: Association and Causation  
 Ask anyone with a high school diploma what they remember and you’ll usually get one of two answers: “the mitochondria is the powerhouse of the cell” or “correlation is not causation.” While the biology fact still stands, our focus today is on the second truth. In principle, the phrase is quite self-explanatory: correlation is merely an association of two pieces of data whereas causation occurs when one event directly contributes to the occurrence of the other. 
 
 ![Correlation vs Causation](/assets/image1.png)
 
 There are countless instances of correlated events not having a causal relationship, such as the increase in associate degrees awarded in science technologies and Google searches for “avocado toast.” Does this mean that as students developed their engineering skills their entire career was leading to the breakthrough of engineering the perfect avocado toast? Not quite. More of these examples can be found on [Tyler Vigen’s project on *Spurious Correlations*](https://www.tylervigen.com/spurious-correlations) [^1].
+""", style={"fontSize": "16px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank")
 
+md_two_faces_bottom = dcc.Markdown(r"""
  
 Though in reverse, we cannot have causation without correlation. This leads us to question the other requirements for causal relationships, at what point can we say the perfection of avocado toast was caused by the increase in associate degrees awarded in science technologies?
 
@@ -544,8 +546,9 @@ app.layout = html.Div([
                 md_header,
 
                 html.Div(id="two-faces", className="section-anchor"),
-                md_two_faces,
+                md_two_faces_top,
                 vigen_card,
+                md_two_faces_bottom,
 
                 html.Div(id="fundamental", className="section-anchor"),
                 md_fundamental,
