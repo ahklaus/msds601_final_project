@@ -2,6 +2,16 @@
 
 This repository contains a Plotly Dash application that presents a blog-style writeup on causal inference alongside an interactive section. It was cloned from `ahklaus/msds601_final_project` and configured to run locally on Windows.
 
+## Live App
+
+- https://msds601-final-project.onrender.com/
+
+The deployed app is hosted on Render and built from the upstream GitHub repository `ahklaus/msds601_final_project`.
+
+## Upstream Source (GitHub)
+
+- https://github.com/ahklaus/msds601_final_project
+
 ## Quickstart (Windows / PowerShell)
 
 ```bash
