@@ -243,8 +243,6 @@ How can both of these associations be true? The answer lies in the confounding v
 
 md_sim_header = dcc.Markdown(r"""
 ## Simpson's Paradox: An Interactive Simulation
-Here’s where you transition to your interactive component.
-Explain what the user will be able to explore below.
 
 ---
 """, style={"fontSize": "16px", "lineHeight": "1.7em"}, link_target="_blank")
