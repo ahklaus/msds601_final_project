@@ -15,7 +15,7 @@ from dash.dependencies import ALL
 
 # Initialize app (Material-like theme)
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.MATERIA])
-app.title = "My Interactive Blog"
+app.title = "Causal Inference in Regression — Interactive Blog"
 server = app.server
 
 # ---------- BLOG CONTENT SECTION ----------
