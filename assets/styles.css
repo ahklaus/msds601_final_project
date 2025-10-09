@@ -24,19 +24,20 @@
 
 /* Graph responsive height for 100% zoom */
 #sim-graph {
-  height: 70vh !important;
+  height: 66vh !important; /* slightly less tall to reduce visual scale */
 }
 
 /* Modern UI additions */
 body, html {
   font-family: Inter, Segoe UI, system-ui, -apple-system, Roboto, Arial, sans-serif;
+  font-size: 15px; /* slightly smaller base for less zoomed-in feel */
 }
 
 .hero {
   background: linear-gradient(135deg, #f8f9fa 0%, #eef2f7 100%);
   border: 1px solid rgba(0,0,0,0.04);
   border-radius: 14px;
-  padding: 18px 20px;
+  padding: 16px 18px; /* slightly tighter */
   margin-bottom: 12px;
 }
 
@@ -54,4 +55,56 @@ body, html {
 }
 .badge-yes { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; }
 .badge-no  { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+
+/* Layout: TOC and smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+.toc-card {
+  position: sticky;
+  top: 20px;
+  border-radius: 12px;
+}
+.toc-list {
+  margin: 0;
+  padding-left: 18px;
+}
+.toc-link {
+  color: #495057;
+  text-decoration: none;
+}
+.toc-link:hover {
+  text-decoration: underline;
+}
+.section-anchor {
+  scroll-margin-top: 24px; /* ensure anchors are not obscured and reduce overshoot */
+}
+
+/* Graph heights for new sections */
+#ovb-graph, #rcm-graph {
+  height: 66vh !important;
+}
+
+/* Sidebar button typography and wrapping */
+.sidebar-btn {
+  font-size: 0.92rem;           /* smaller text */
+  text-transform: none !important; /* keep original capitalization */
+  white-space: normal;          /* allow wrapping */
+  word-break: keep-all;         /* avoid breaking inside words */
+  overflow-wrap: anywhere;      /* wrap long phrases at safe points */
+}
+
+/* Beta input group spacing */
+.beta-input-group .input-group-text {
+  min-width: 36px; /* narrower label chip */
+  padding: 2px 8px; /* tighter */
+  justify-content: center;
+}
+.beta-input-group .beta-equals {
+  min-width: 18px; /* very tight equals */
+  padding: 2px 6px;
+}
+.beta-input-group input[type="number"] {
+  text-align: left;
+}
 

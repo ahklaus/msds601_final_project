@@ -3,6 +3,7 @@ from dash import html, dcc
 import dash_bootstrap_components as dbc
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from simpsons import (
     generate_simpsons_data,
     build_simpsons_figure,
@@ -12,8 +13,8 @@ from dash.dependencies import ALL
 
 """Interactive blog + Simpson's Paradox simulation."""
 
-# Initialize app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUX])
+# Initialize app (Material-like theme)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.MATERIA])
 app.title = "My Interactive Blog"
 server = app.server
 
@@ -21,12 +22,14 @@ server = app.server
 # You can paste your blog paragraphs here as Markdown.
 # Use ###, ####, and **bold/italic** syntax for structure.
 
-blog_content = dcc.Markdown(r"""
+md_header = dcc.Markdown(r"""
 # Causal Inference in Regression
 *MSDS601 Final Project by Amelia Klaus, Rodrigo Cuadra, & Rory Mackintosh *  
 
 ---
+""", style={"fontSize": "16px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank")
 
+md_two_faces = dcc.Markdown(r"""
 ## The Two Faces of Regression: Association and Causation  
 Ask anyone with a high school diploma what they remember and you’ll usually get one of two answers: “the mitochondria is the powerhouse of the cell” or “correlation is not causation.” While the biology fact still stands, our focus today is on the second truth. In principle, the phrase is quite self-explanatory: correlation is merely an association of two pieces of data whereas causation occurs when one event directly contributes to the occurrence of the other. 
 
@@ -40,7 +43,9 @@ Though in reverse, we cannot have causation without correlation. This leads us t
 Before we get there, it’s important to look at the inferences of regression, specifically, the difference between prediction and causal inference. Prediction involves the comparison of outcomes between different units. An example of this would be comparing the test scores of two students: one who studied for the test and one who did not. Causal inference takes the same unit and examines multiple outcomes. How would student A’s test score differ if they studied versus if they didn’t? This type of inference addresses the issue of “correlation is not causation” because it fixates on cause-and-effect relationships to draw conclusions beyond statistical association. 
 
 Standard regression is a tool built for prediction, not causation. So to be able to draw causal conclusions from regression models, we must focus on strict assumptions and frameworks. Going forward, we will tackle the fundamental problem with causal inference, a framework to define and identify causal effects, and a real-world example using Simpson’s Paradox.
+""", style={"fontSize": "16px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank")
 
+md_fundamental = dcc.Markdown(r"""
 ### The Fundamental Problem
   
 Now where exactly is the problem with causal inference? To visualize this, I like to think about the butterfly effect. Imagine you’re a student who realized too late that there’s an exam tomorrow (perhaps for a particular regression class). Your mind is split between two choices:
@@ -51,6 +56,9 @@ Now where exactly is the problem with causal inference? To visualize this, I lik
 In your head, you can play out both timelines. Maybe in choice 1, you bomb the exam and flunk out of your program. Alternatively, in choice 2, you ace the exam and the class, impress your professor, and land your dream job on behalf of your academic merit.
 
 But in reality, you only get to live one of those outcomes. In this case, you either sleep or you don't, which determines the test score you receive. The other path is forever unknowable. Introducing the fundamental problem of causal inference: for any individual, we can only observe the outcome of the decision they actually made and not the alternative reality. Ideally, we want to know how outcomes (test scores here) would change due to different treatments (studying). Regression only provides access to the single outcome of the choice that was made, but the counterfactuals, or the roads not taken, are always missing.  
+""", style={"fontSize": "16px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank")
+
+md_slr_mlr = dcc.Markdown(r"""
 ### SLR, MLR, and Multicollinearity
 In the context of simple linear regression, take the example above of predicting exam scores, $Y$, from study hours, $X_1$. To build a simple regression model we hypothesize the model to be of the form
 
@@ -107,7 +115,9 @@ Now looking at MLR for causation, we want to know if the variation in $X$ is ind
 $$\hat{\beta}_1 = \frac{Cov(Y,X|Z)}{Var(X|Z)}$$
 
 If $Var(X|Z)$ is small (because they move together), we don't have as much information to estimate the causal effect. Here, multicollinearity results in the loss of the ability to identify causality. 
+""", style={"fontSize": "16px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank")
 
+md_rubin = dcc.Markdown(r"""
 ### Rubin's Causal Model
 
 Causal inference boils down to a missing data problem. How do we estimate what we can't see? This question is foundational to the Rubin Causal Model (RCM), which defines causal effects as a comparison of what would have happened to the same units under different treatments. Let's change our example and instead of studying, we've discovered a drug that condenses an entire module's worth of content into one digestible pill. We're still interested in test scores, but we want to see if our drug works.
@@ -167,20 +177,22 @@ The idea behind all of this is that **randomization implies ignorability**, givi
 **Warning! Do NOT control post-treatment variables**
 
 Though it was perfectly fine to take pre-treatment variables into account, variables measured before the treatment were not impacted by the treatment, but measuring a variable after treatment can introduce bias and invalidate the causal estimate, even if we properly randomized! This is because we are comparing groups that are fundamentally different. Comparing treatment and control groups on the basis of some outcome score is inherently biased because each individual likely had different potentials long before the experiment took place [^5].
+""", style={"fontSize": "16px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank")
 
+md_simpson = dcc.Markdown(r"""
 ### Simpson's Paradox
 To put together all that we’ve discussed so far, let’s look at a real-world example of how regression can be misleading through Simpson’s Paradox. Simpson’s Paradox occurs where an association, or trend, that appears in an entire population is reversed when looking at subpopulations. For instance, a simple linear regression might show that X increases Y, but when we split the data by another variable, Z, each subgroup shows the opposite trend [^6].
 
 How can both of these associations be true? The answer lies in the confounding variables we discussed earlier. Since Z influences both X and Y, it distorts their relationship when combining data. By identifying Z, we’ve found a true causal predictor as the relationship between X and Y fades. Simpson’s Paradox is less of a paradox, and more of a design problem. Ignoring our confounders can lead to a completely different analysis of our data.
+""", style={"fontSize": "16px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank")
 
+md_sim_header = dcc.Markdown(r"""
 ## Simpson's Paradox: An Interactive Simulation
 Here’s where you transition to your interactive component.
 Explain what the user will be able to explore below.
 
 ---
-    """,
-    style={"fontSize": "18px", "lineHeight": "1.7em"}, mathjax=True, link_target="_blank"
-)
+""", style={"fontSize": "16px", "lineHeight": "1.7em"}, link_target="_blank")
 
 
 # ---------- INTERACTIVE DASHBOARD SECTION ----------
@@ -267,7 +279,7 @@ graph_card = dbc.Card(
     body=True,
 )
 
-interactive_section = dbc.Container(
+simpson_section = dbc.Container(
     [
         dbc.Row(
             [
@@ -282,8 +294,7 @@ interactive_section = dbc.Container(
     style={"maxWidth": "1200px", "padding": "0 12px"},
 )
 
-# ---------- BLOG CONTINUATION ----------
-blog_followup = dcc.Markdown(
+md_conclusion = dcc.Markdown(
     """
 
 ---
@@ -298,9 +309,12 @@ In short, the best predictive model isn’t always the best causal model. Regres
 ---
 
 *Thanks for reading!*
+""",
+    style={"fontSize": "16px", "lineHeight": "1.7em"}, link_target="_blank"
+)
 
-
-
+md_references = dcc.Markdown(
+    """
 ## References
 
 [^1]: Vigen, Tyler. "Spurious Correlations." Accessed October 7, 2025. https://www.tylervigen.com/spurious-correlations.
@@ -315,26 +329,196 @@ In short, the best predictive model isn’t always the best causal model. Regres
 
 [^6]: Selvitella, Alessandro. "The Ubiquity of the Simpson's Paradox." *Journal of Statistical Distributions and Applications* 4, no. 2 (2017). https://doi.org/10.1186/s40488-017-0056-5.
     """,
-    style={"fontSize": "18px", "lineHeight": "1.7em"}, link_target="_blank"
+    style={"fontSize": "16px", "lineHeight": "1.7em"}, link_target="_blank"
 )
 
-# ---------- APP LAYOUT ----------
-app.layout = dbc.Container(
+# ---------- NEW INTERACTIVE: OVB / Multicollinearity ----------
+ovb_controls = dbc.Card(
     [
+        html.Div([
+            html.H4("OVB & Multicollinearity Explorer", className="card-title", style={"marginBottom": "2px"}),
+            html.Div("Compare SLR vs MLR when X and Z are correlated.", style={"color": "#6c757d"}),
+        ], className="hero"),
+
+        dbc.Row([
+            dbc.Col([
+                html.Label("Sample size", style={"fontWeight": 600}),
+                dcc.Slider(id="ovb-n", min=100, max=5000, step=100, value=1000, tooltip={"placement": "bottom"}),
+            ], md=6),
+            dbc.Col([
+                html.Label("Noise (sigma)", style={"fontWeight": 600}),
+                dcc.Slider(id="ovb-sigma", min=0, max=3, step=0.05, value=1.0, tooltip={"placement": "bottom"}),
+            ], md=6),
+        ]),
+
         html.Br(),
-        blog_content,
+
+        dbc.Row([
+            dbc.Col([
+                html.Label("β1 (effect of X)", style={"fontWeight": 600}),
+                dcc.Slider(id="ovb-beta1", min=-3, max=3, step=0.1, value=1.0, tooltip={"placement": "bottom"}),
+            ], md=6),
+            dbc.Col([
+                html.Label("β2 (effect of Z)", style={"fontWeight": 600}),
+                dcc.Slider(id="ovb-beta2", min=-3, max=3, step=0.1, value=1.0, tooltip={"placement": "bottom"}),
+            ], md=6),
+        ]),
+
         html.Br(),
-        interactive_section,
-        html.Br(),
-        blog_followup,
-        html.Br(),
-        html.Footer(
-            "© 2025 Your Name | Built with Plotly Dash",
-            style={"textAlign": "center", "marginTop": "40px", "color": "gray"},
-        ),
+
+        dbc.Row([
+            dbc.Col([
+                html.Label("Corr(X,Z) = ρ", style={"fontWeight": 600}),
+                dcc.Slider(id="ovb-rho", min=-0.95, max=0.95, step=0.05, value=0.6, tooltip={"placement": "bottom"}),
+            ], md=8),
+            dbc.Col([
+                html.Label("Seed", style={"fontWeight": 600}),
+                dcc.Input(id="ovb-seed", type="text", value="", placeholder="Optional", style={"width": "100%"}),
+            ], md=4),
+        ]),
+
+        html.Div([
+            dbc.Button("Randomize", id="ovb-rand", color="primary", className="me-1"),
+            dbc.Button("Reset", id="ovb-reset", outline=True, color="secondary", className="btn-ghost"),
+        ], className="mt-2"),
+
+        html.Div(id="ovb-summary", style={"marginTop": "12px", "color": "#495057"}),
     ],
-    fluid=True,
+    body=True,
 )
+
+ovb_graph_card = dbc.Card([
+    dcc.Graph(id="ovb-graph", config={"displayModeBar": True, "displaylogo": False}, style={"height": "600px"}),
+], body=True)
+
+ovb_section = dbc.Container([
+    dbc.Row([
+        dbc.Col(ovb_controls, md=3),
+        dbc.Col(ovb_graph_card, md=9),
+    ], className="g-2", align="center")
+], fluid=True, style={"maxWidth": "1200px", "padding": "0 12px"})
+
+
+# ---------- NEW INTERACTIVE: Rubin Causal Model ----------
+rcm_controls = dbc.Card(
+    [
+        html.Div([
+            html.H4("Rubin Causal Model Explorer", className="card-title", style={"marginBottom": "2px"}),
+            html.Div("See bias from confounded assignment and IPW correction.", style={"color": "#6c757d"}),
+        ], className="hero"),
+
+        dbc.Row([
+            dbc.Col([
+                html.Label("Sample size", style={"fontWeight": 600}),
+                dcc.Slider(id="rcm-n", min=200, max=10000, step=200, value=2000, tooltip={"placement": "bottom"}),
+            ], md=6),
+            dbc.Col([
+                html.Label("Noise (sigma)", style={"fontWeight": 600}),
+                dcc.Slider(id="rcm-sigma", min=0, max=3, step=0.05, value=1.0, tooltip={"placement": "bottom"}),
+            ], md=6),
+        ]),
+
+        html.Br(),
+
+        dbc.Row([
+            dbc.Col([
+                html.Label("τ (true ATE)", style={"fontWeight": 600}),
+                dcc.Slider(id="rcm-tau", min=-3, max=3, step=0.1, value=1.0, tooltip={"placement": "bottom"}),
+            ], md=6),
+            dbc.Col([
+                html.Label("α (effect of X)", style={"fontWeight": 600}),
+                dcc.Slider(id="rcm-alpha", min=-3, max=3, step=0.1, value=1.0, tooltip={"placement": "bottom"}),
+            ], md=6),
+        ]),
+
+        html.Br(),
+
+        dbc.Row([
+            dbc.Col([
+                html.Label("Assignment bias k (in e(x)=sigmoid(k·X))", style={"fontWeight": 600}),
+                dcc.Slider(id="rcm-k", min=-5, max=5, step=0.1, value=2.0, tooltip={"placement": "bottom"}),
+            ], md=8),
+            dbc.Col([
+                html.Label("Seed", style={"fontWeight": 600}),
+                dcc.Input(id="rcm-seed", type="text", value="", placeholder="Optional", style={"width": "100%"}),
+            ], md=4),
+        ]),
+
+        html.Div([
+            dbc.Button("Randomize", id="rcm-rand", color="primary", className="me-1"),
+            dbc.Button("Reset", id="rcm-reset", outline=True, color="secondary", className="btn-ghost"),
+        ], className="mt-2"),
+
+        html.Div(id="rcm-summary", style={"marginTop": "12px", "color": "#495057"}),
+    ],
+    body=True,
+)
+
+rcm_graph_card = dbc.Card([
+    dcc.Graph(id="rcm-graph", config={"displayModeBar": True, "displaylogo": False}, style={"height": "600px"}),
+], body=True)
+
+rcm_section = dbc.Container([
+    dbc.Row([
+        dbc.Col(rcm_controls, md=3),
+        dbc.Col(rcm_graph_card, md=9),
+    ], className="g-2", align="center")
+], fluid=True, style={"maxWidth": "1200px", "padding": "0 12px"})
+
+
+# ---------- SIDEBAR NAV ----------
+sidebar = dbc.Card([
+    html.Div("Causal Inference in Regression", className="h5", style={"marginBottom": "8px"}),
+    html.Div([
+        html.A("Two Faces", href="#two-faces", className="btn btn-outline-primary w-100 mb-2 text-start sidebar-btn"),
+        html.A("Fundamental Problem", href="#fundamental", className="btn btn-outline-primary w-100 mb-2 text-start sidebar-btn"),
+        html.A("SLR / MLR & Multicollinearity", href="#slr-mlr", className="btn btn-outline-primary w-100 mb-2 text-start sidebar-btn"),
+        html.A("Rubin's Causal Model", href="#rubin", className="btn btn-outline-primary w-100 mb-2 text-start sidebar-btn"),
+        html.A("Simpson's Paradox", href="#simpson", className="btn btn-outline-primary w-100 mb-2 text-start sidebar-btn"),
+        html.A("Conclusion", href="#conclusion", className="btn btn-outline-primary w-100 mb-2 text-start sidebar-btn"),
+        html.A("References", href="#references", className="btn btn-outline-primary w-100 mb-0 text-start sidebar-btn"),
+    ])
+], body=True, className="toc-card")
+
+# ---------- APP LAYOUT ----------
+app.layout = html.Div([
+    dcc.Location(id="url"),
+    dbc.Container([
+        dbc.Row([
+            dbc.Col(sidebar, md=2),
+            dbc.Col([
+                html.Div(id="top", className="section-anchor"),
+                md_header,
+
+                html.Div(id="two-faces", className="section-anchor"),
+                md_two_faces,
+
+                html.Div(id="fundamental", className="section-anchor"),
+                md_fundamental,
+
+                html.Div(id="slr-mlr", className="section-anchor"),
+                md_slr_mlr,
+                ovb_section,
+
+                html.Div(id="rubin", className="section-anchor"),
+                md_rubin,
+                rcm_section,
+
+                html.Div(id="simpson", className="section-anchor"),
+                md_simpson,
+                md_sim_header,
+                simpson_section,
+
+                html.Div(id="conclusion", className="section-anchor"),
+                md_conclusion,
+
+                html.Div(id="references", className="section-anchor"),
+                md_references,
+
+            ], md=10)
+        ], className="content-row")
+    ], fluid=True)
+])
 
 # ---------- CALLBACKS ----------
 @app.callback(
@@ -440,12 +624,201 @@ def render_beta_inputs(n_groups):
             dbc.InputGroup(
                 [
                     dbc.InputGroupText(f"β{i+1}"),
-                    dbc.Input(id={"type": "beta", "index": i}, type="number", step=0.1, value=1.0, debounce=True),
+                    dbc.InputGroupText("=", className="beta-equals"),
+                    dbc.Input(
+                        id={"type": "beta", "index": i},
+                        type="number",
+                        step=0.1,
+                        value=1.0,
+                        debounce=True,
+                    ),
                 ],
-                className="mb-2",
+                className="mb-2 beta-input-group",
             )
         )
     return rows
+
+
+
+
+# ---------- CALLBACKS: OVB / Multicollinearity ----------
+@app.callback(
+    dash.Output("ovb-graph", "figure"),
+    dash.Output("ovb-summary", "children"),
+    dash.Input("ovb-n", "value"),
+    dash.Input("ovb-sigma", "value"),
+    dash.Input("ovb-beta1", "value"),
+    dash.Input("ovb-beta2", "value"),
+    dash.Input("ovb-rho", "value"),
+    dash.Input("ovb-seed", "value"),
+    dash.Input("ovb-rand", "n_clicks"),
+    dash.Input("ovb-reset", "n_clicks"),
+)
+def update_ovb(n, sigma, beta1, beta2, rho, seed_text, n_rand, n_reset):
+    # Handle seed and reset
+    seed = None
+    try:
+        if str(seed_text).strip() != "":
+            seed = int(str(seed_text).strip())
+    except Exception:
+        seed = None
+
+    ctx = dash.callback_context
+    if ctx and ctx.triggered:
+        trig = ctx.triggered[0]["prop_id"].split(".")[0]
+        if trig == "ovb-rand":
+            seed = np.random.randint(0, 10_000_000)
+        elif trig == "ovb-reset":
+            n = 1000
+            sigma = 1.0
+            beta1 = 1.0
+            beta2 = 1.0
+            rho = 0.6
+            seed = None
+
+    rng = np.random.default_rng(seed)
+    cov = np.array([[1.0, float(rho)], [float(rho), 1.0]])
+    mean = np.array([0.0, 0.0])
+    xz = rng.multivariate_normal(mean=mean, cov=cov, size=int(n))
+    x = xz[:, 0]
+    z = xz[:, 1]
+    y = float(beta1) * x + float(beta2) * z + rng.normal(0.0, float(sigma), size=int(n))
+
+    # SLR (omit Z)
+    slr_beta, slr_intercept = compute_linear_fit(x, y)
+
+    # MLR (include Z)
+    X = np.column_stack([np.ones_like(x), x, z])
+    coef, *_ = np.linalg.lstsq(X, y, rcond=None)
+    mlr_beta = float(coef[1])
+
+    # Partial residuals for visualization
+    # Regress Y on Z
+    Z1 = np.column_stack([np.ones_like(z), z])
+    coef_yz, *_ = np.linalg.lstsq(Z1, y, rcond=None)
+    y_res = y - (coef_yz[0] + coef_yz[1] * z)
+    # Regress X on Z
+    coef_xz, *_ = np.linalg.lstsq(Z1, x, rcond=None)
+    x_res = x - (coef_xz[0] + coef_xz[1] * z)
+
+    # Fit on residuals (should equal mlr_beta)
+    pr_beta, pr_intercept = compute_linear_fit(x_res, y_res)
+
+    fig = make_subplots(rows=1, cols=2, subplot_titles=("SLR: Y vs X", "MLR: Partial (Y~X|Z)"))
+
+    fig.add_trace(go.Scatter(x=x, y=y, mode="markers", marker=dict(size=6, opacity=0.6, color="#4e79a7"),
+                              name="Data", hovertemplate="X=%{x:.2f}<br>Y=%{y:.2f}<extra></extra>"), row=1, col=1)
+    x_line = np.array([x.min(), x.max()])
+    y_line = slr_beta * x_line + slr_intercept
+    fig.add_trace(go.Scatter(x=x_line, y=y_line, mode="lines", name="SLR fit", line=dict(color="#111", width=3)), row=1, col=1)
+
+    fig.add_trace(go.Scatter(x=x_res, y=y_res, mode="markers", marker=dict(size=6, opacity=0.6, color="#59a14f"),
+                              name="Residualized", hovertemplate="X_res=%{x:.2f}<br>Y_res=%{y:.2f}<extra></extra>"), row=1, col=2)
+    xr_line = np.array([x_res.min(), x_res.max()])
+    yr_line = pr_beta * xr_line + pr_intercept
+    fig.add_trace(go.Scatter(x=xr_line, y=yr_line, mode="lines", name="MLR partial fit", line=dict(color="#111", width=3)), row=1, col=2)
+
+    fig.update_layout(template="plotly_white", paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                      font=dict(family="Inter, Segoe UI, system-ui, -apple-system", size=15),
+                      margin=dict(l=40, r=30, t=60, b=40))
+    fig.update_xaxes(showgrid=True, gridcolor="rgba(0,0,0,0.06)")
+    fig.update_yaxes(showgrid=True, gridcolor="rgba(0,0,0,0.06)")
+
+    bias_est = slr_beta - float(beta1)
+    summary = html.Div([
+        html.Span("β̂_SLR ", style={"fontWeight": 600}), html.Span(f"= {slr_beta:+.3f}  "),
+        html.Span(" | β̂_MLR ", style={"fontWeight": 600}), html.Span(f"= {mlr_beta:+.3f}  "),
+        html.Span(" | ρ(X,Z) ", style={"fontWeight": 600}), html.Span(f"= {float(rho):+.2f}  "),
+        html.Br(),
+        html.Span("SLR bias vs true β1: ", style={"fontWeight": 600}), html.Span(f"{bias_est:+.3f}"),
+    ])
+
+    return fig, summary
+
+
+# ---------- CALLBACKS: Rubin Causal Model ----------
+@app.callback(
+    dash.Output("rcm-graph", "figure"),
+    dash.Output("rcm-summary", "children"),
+    dash.Input("rcm-n", "value"),
+    dash.Input("rcm-sigma", "value"),
+    dash.Input("rcm-tau", "value"),
+    dash.Input("rcm-alpha", "value"),
+    dash.Input("rcm-k", "value"),
+    dash.Input("rcm-seed", "value"),
+    dash.Input("rcm-rand", "n_clicks"),
+    dash.Input("rcm-reset", "n_clicks"),
+)
+def update_rcm(n, sigma, tau, alpha, k, seed_text, n_rand, n_reset):
+    # Handle seed and reset
+    seed = None
+    try:
+        if str(seed_text).strip() != "":
+            seed = int(str(seed_text).strip())
+    except Exception:
+        seed = None
+
+    ctx = dash.callback_context
+    if ctx and ctx.triggered:
+        trig = ctx.triggered[0]["prop_id"].split(".")[0]
+        if trig == "rcm-rand":
+            seed = np.random.randint(0, 10_000_000)
+        elif trig == "rcm-reset":
+            n = 2000
+            sigma = 1.0
+            tau = 1.0
+            alpha = 1.0
+            k = 2.0
+            seed = None
+
+    rng = np.random.default_rng(seed)
+    n = int(n)
+    x = rng.normal(0.0, 1.0, size=n)
+    eps = rng.normal(0.0, float(sigma), size=n)
+
+    # Potential outcomes
+    y0 = 0.0 + float(alpha) * x + eps
+    y1 = y0 + float(tau)
+
+    # Assignment with propensity depending on x
+    logits = float(k) * x
+    e = 1.0 / (1.0 + np.exp(-logits))
+    t = rng.binomial(1, p=np.clip(e, 1e-6, 1 - 1e-6))
+
+    y = t * y1 + (1 - t) * y0
+
+    # Estimates
+    naive = float(y[t == 1].mean() - y[t == 0].mean()) if (t.sum() > 0 and (n - t.sum()) > 0) else float("nan")
+    ipw = float(np.mean(t * y / e - (1 - t) * y / (1 - e)))
+
+    # Plot: scatter and bars
+    fig = make_subplots(rows=1, cols=2, column_widths=[0.7, 0.3], subplot_titles=("Observed data (color = T)", "ATE estimates"))
+
+    fig.add_trace(go.Scatter(x=x, y=y, mode="markers", marker=dict(size=6, opacity=0.65, color=np.where(t==1, "#e15759", "#4e79a7")),
+                              name="Units", hovertemplate="X=%{x:.2f}<br>Y=%{y:.2f}<extra></extra>"), row=1, col=1)
+    fig.update_xaxes(title_text="X", row=1, col=1)
+    fig.update_yaxes(title_text="Y", row=1, col=1)
+
+    bars_x = ["True", "Naive", "IPW"]
+    bars_y = [float(tau), naive, ipw]
+    fig.add_trace(go.Bar(x=bars_x, y=bars_y, marker_color=["#59a14f", "#f28e2b", "#edc948"], showlegend=False), row=1, col=2)
+    fig.update_yaxes(title_text="ATE", row=1, col=2)
+
+    fig.update_layout(template="plotly_white", paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                      font=dict(family="Inter, Segoe UI, system-ui, -apple-system", size=15),
+                      margin=dict(l=40, r=30, t=60, b=40))
+    fig.update_xaxes(showgrid=True, gridcolor="rgba(0,0,0,0.06)")
+    fig.update_yaxes(showgrid=True, gridcolor="rgba(0,0,0,0.06)")
+
+    summary = html.Div([
+        html.Span("True ATE τ ", style={"fontWeight": 600}), html.Span(f"= {float(tau):+.3f}  "),
+        html.Span(" | Naive diff ", style={"fontWeight": 600}), html.Span(f"= {naive:+.3f}  "),
+        html.Span(" | IPW ", style={"fontWeight": 600}), html.Span(f"= {ipw:+.3f}  "),
+        html.Br(),
+        html.Span("Mean propensity e(X): ", style={"fontWeight": 600}), html.Span(f"{float(e.mean()):.3f}"),
+    ])
+
+    return fig, summary
 
 
 if __name__ == "__main__":
